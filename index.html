@@ -161,8 +161,6 @@ var S = { trust:100, score:0, mod:0, done:{}, stars:{}, errors:[], combo:0, mist
 var MODE = 'normal';   // normal | recover | misto | rescue
 var PEND = [];         // cenários errados no módulo atual (rodada de recuperação)
 var RUN_SAMPLE = {};   // perguntas sorteadas do banco para a rodada atual do módulo
-var RUN_SAMPLE_REST = {}; // restante do banco (bancos grandes) para continuar sem reiniciar o módulo
-var PEND_MAIS = null;  // contexto pendente da tela "responder mais perguntas"
 var screen = document.getElementById('screen');
 
 /* ================= PERFIS (multijogador no mesmo computador) ================= */
@@ -1004,7 +1002,18 @@ var MODS = [
      {t:'Não cabe orientação da unidade de saúde sobre isso: é decisão exclusivamente da família.', ok:false,
       fb:'O módulo orienta explicitamente sobre isso — é papel do profissional orientar a família sobre liberdade de movimento e segurança, parte do cuidado com dignidade (PCE/PSI).'}
     ],
-    licao:'PSI 2.4: liberdade de movimento, evitar restrição desnecessária, garantindo segurança básica.'}
+    licao:'PSI 2.4: liberdade de movimento, evitar restrição desnecessária, garantindo segurança básica.'},
+   {ctx:'Davi está em remissão completa dos sintomas de psicose há vários anos, sem nenhuma recaída, e pergunta se pode suspender o antipsicótico. Já Marina teve sintomas psicóticos persistentes por 4 meses antes de responder ao tratamento — os sintomas cessaram há 12 meses.',
+    q:'Segundo o seguimento do módulo, quando considerar a suspensão do antipsicótico?',
+    opts:[
+     {t:'Primeiro episódio em remissão completa há vários anos: pode-se considerar suspender. Sintomas que persistiram >3 meses antes de responder: considerar suspensão só 12 meses após a resolução — sempre com redução gradual e monitoramento.', ok:true,
+      fb:'PSI 3 (Seguimento): critérios distintos de suspensão conforme o curso do quadro; redução sempre gradual e lenta, com pessoa e família orientadas a reconhecer sinais precoces de recaída.'},
+     {t:'Antipsicótico na psicose é sempre vitalício: nunca deve ser suspenso, mesmo com anos de remissão completa.', ok:false,
+      fb:'O módulo prevê, sim, a possibilidade de suspensão em remissão prolongada — de forma gradual, com monitoramento clínico rigoroso.'},
+     {t:'Pode suspender de uma vez, sem redução gradual, assim que a pessoa disser que está se sentindo bem.', ok:false,
+      fb:'A suspensão é sempre gradual e lenta, nunca abrupta — com pessoa e família atentas aos primeiros sinais de recaída.'}
+    ],
+    licao:'PSI 3: suspensão do antipsicótico é possível (remissão prolongada ou 12 meses após resolução de quadro >3 meses), sempre gradual e monitorada.'}
   ]}
 ]},
 
@@ -1156,7 +1165,18 @@ var MODS = [
      {t:'Apenas dosagem de eletrólitos; o restante é atribuição do especialista.', ok:false,
       fb:'A anamnese causal completa é da atenção primária; o especialista entra na avaliação complementar dos casos indicados.'}
     ],
-    licao:'Causas da epilepsia: asfixia/trauma ao nascer, TCE, infecção encefálica, história familiar; exame neurológico com foco em déficits.'}
+    licao:'Causas da epilepsia: asfixia/trauma ao nascer, TCE, infecção encefálica, história familiar; exame neurológico com foco em déficits.'},
+   {ctx:'Marcos está em monoterapia há 3 meses, na dose atual, mas a frequência das crises reduziu menos de 50% em relação ao início do tratamento.',
+    q:'Segundo o seguimento do módulo EPI, qual é o próximo passo?',
+    opts:[
+     {t:'Verificar a adesão ao medicamento e, se estiver correta, considerar aumentar a dose até a máxima tolerada; se ainda insatisfatório, trocar de antiepiléptico (atingindo a dose ótima do novo antes de retirar o primeiro) e, persistindo, reavaliar o diagnóstico e encaminhar ao especialista.', ok:true,
+      fb:'EPI 3 (Seguimento): consulta a cada 3–6 meses; resposta <50% pede adesão → dose máxima → troca de fármaco → reavaliação diagnóstica e especialista, nessa ordem.'},
+     {t:'Trocar imediatamente para um segundo antiepiléptico em associação, sem checar adesão nem ajustar a dose do primeiro.', ok:false,
+      fb:'O primeiro passo é sempre checar a adesão e otimizar a dose do medicamento atual — a troca só vem depois, e de forma gradual.'},
+     {t:'Manter exatamente a mesma conduta, já que qualquer redução nas crises é considerada sucesso terapêutico.', ok:false,
+      fb:'Resposta insatisfatória (<50% de redução) exige reavaliação ativa da conduta, não apenas manter o esquema.'}
+    ],
+    licao:'EPI 3: seguimento a cada 3–6 meses; resposta insatisfatória → adesão/dose máxima → troca gradual de fármaco → reavaliar diagnóstico e encaminhar ao especialista.'}
   ]}
 ]},
 
@@ -1276,7 +1296,18 @@ var MODS = [
      {t:'Retornar apenas se a escola registrar novas queixas.', ok:false,
       fb:'Terceirizar o monitoramento à escola inverte os papéis: o serviço de saúde mantém o seguimento ativo.'}
     ],
-    licao:'Seguimento MCO: a cada 3 meses ou mais frequente, com contato escolar contínuo.'}
+    licao:'Seguimento MCO: a cada 3 meses ou mais frequente, com contato escolar contínuo.'},
+   {ctx:'Bruno, 14 anos: há mais de 6 meses furta objetos de colegas, já provocou um princípio de incêndio no quintal, agride fisicamente o irmão mais novo com frequência e fugiu de casa duas vezes — em casa, na escola e na rua.',
+    q:'Esse quadro se encaixa em qual protocolo do módulo MCO?',
+    opts:[
+     {t:'Transtorno de conduta: sintomas graves (agressão a pessoas, destruição de propriedade, furto, fuga de casa), presentes em diferentes ambientes por ≥ 6 meses, muito além da rebeldia comum da idade.', ok:true,
+      fb:'MCO Protocolo 4 (Transtorno de conduta): quadro mais grave que "problemas de comportamento" — cross-situacional, ≥6 meses, com agressão, destruição, furto ou fuga; manejo é psicossocial, igual ao de problemas de comportamento, mas sem medicação de rotina.'},
+     {t:'Problemas de comportamento comuns da adolescência: basta orientar os pais e aguardar a fase passar, sem outra conduta.', ok:false,
+      fb:'A gravidade, a duração (≥6 meses) e a presença em múltiplos ambientes ultrapassam o que o módulo chama de "problemas de comportamento" — é transtorno de conduta.'},
+     {t:'TDAH não diagnosticado: iniciar metilfenidato para conter a agressividade.', ok:false,
+      fb:'Sem os critérios de desatenção/hiperatividade do protocolo de TDAH, e mesmo neste transtorno o fármaco nunca é a primeira linha nem o alvo é a agressividade isolada.'}
+    ],
+    licao:'MCO Protocolo 4 — Transtorno de conduta: agressão, destruição, furto ou fuga, cross-situacional, ≥6 meses; manejo psicossocial (orientação, habilidades parentais, escola), sem fármaco.'}
   ]}
 ]},
 
@@ -1597,7 +1628,18 @@ var MODS = [
      {t:'Tratar com doses decrescentes da própria droga de rua, compradas pelo paciente.', ok:false,
       fb:'A substituição usa agonistas controlados em programa estruturado — não a droga de rua em esquema informal.'}
     ],
-    licao:'Abstinência de opioides: sintomática e raramente fatal; manejo planejado + manutenção com agonistas.'}
+    licao:'Abstinência de opioides: sintomática e raramente fatal; manejo planejado + manutenção com agonistas.'},
+   {ctx:'Paula (uso prejudicial de álcool, sem dependência) e Seu Jorge (dependência, em desintoxicação) saem juntos da consulta inicial.',
+    q:'Qual é o esquema de seguimento indicado para cada um, segundo o módulo SUB?',
+    opts:[
+     {t:'Paula (uso prejudicial): retorno em 1 mês, depois conforme necessidade. Seu Jorge (dependência): contatos várias vezes por semana nas 2 primeiras semanas, semanal no 1º mês, espaçando para mensal com a melhora.', ok:true,
+      fb:'SUB 3 (Seguimento): a frequência de contato é bem mais intensa na dependência do que no uso prejudicial, reduzindo gradualmente conforme a resposta.'},
+     {t:'Os dois seguem o mesmo esquema: retorno em 6 meses para ambos, já que nenhum é uma emergência.', ok:false,
+      fb:'Uso prejudicial e dependência têm intensidades de acompanhamento bem diferentes — a dependência exige contato muito mais frequente no início.'},
+     {t:'Só a dependência exige seguimento; uso prejudicial, por não ser dependência, recebe alta imediata sem retorno.', ok:false,
+      fb:'O uso prejudicial também tem seguimento previsto (cerca de 1 mês) — abandonar o acompanhamento perde a chance de reforçar a mudança.'}
+    ],
+    licao:'SUB 3: seguimento mais intenso na dependência (várias vezes/semana → semanal → mensal) do que no uso prejudicial (cerca de 1 mês, depois conforme necessidade).'}
   ]}
 ]},
 
@@ -2023,7 +2065,7 @@ function mapaGeral(){
 
 function introMod(i){
   S.mod=i;
-  MODE='normal'; PEND=[]; RUN_SAMPLE={}; RUN_SAMPLE_REST={}; // novo sorteio de perguntas a cada rodada do módulo
+  MODE='normal'; PEND=[]; RUN_SAMPLE={}; // novo sorteio de perguntas a cada rodada do módulo
   S.ft[i]={t:0,c:0}; // zera stats ao (re)começar o módulo
   // Novo paciente, novo vínculo: quem chegou com a confiança baixa recomeça de um patamar base
   var recomecou = S.trust < 70;
@@ -2053,60 +2095,16 @@ function runAct(a){
   if(a>=m.acts.length){ recoverRound(); return; }
   var act=m.acts[a];
   if(act.type==='cenario'){
-    // Sorteio SEM reposição: prioriza perguntas que este jogador ainda não viu,
-    // garantindo que rodadas sucessivas cubram o banco inteiro do módulo.
-    if(!RUN_SAMPLE[a]){
-      if(act.data.length>5){
-        var vist = S.vistos[S.mod] || {};
-        var novas = act.data.filter(function(c){ return !vist[c.q]; });
-        var antigas = act.data.filter(function(c){ return vist[c.q]; });
-        // A rodada cobre metade do banco por vez, com opção de responder
-        // o restante na sequência, sem sair do módulo (vale para todo módulo
-        // com banco >5 perguntas — quanto maior o banco, mais isso ajuda).
-        var qtd = Math.ceil(act.data.length/2);
-        var sel = shuffle(novas).slice(0,qtd);
-        if(sel.length<qtd) sel = sel.concat(shuffle(antigas).slice(0, qtd-sel.length));
-        RUN_SAMPLE[a] = sel;
-        var usados = {}; sel.forEach(function(c){ usados[c.q]=true; });
-        var resto = shuffle(act.data.filter(function(c){ return !usados[c.q]; }));
-        if(resto.length) RUN_SAMPLE_REST[a] = resto;
-      } else RUN_SAMPLE[a] = act.data;
-    }
-    cenario(RUN_SAMPLE[a], 0, function(){ ofereceMais(a, function(){ runAct(a+1); }); });
+    // Desde o início, o jogador tem acesso a todas as perguntas do banco do
+    // módulo (os bancos são pequenos o bastante para isso — 10 a 22 casos).
+    // A ordem é sorteada a cada rodada para não ficar decorável.
+    if(!RUN_SAMPLE[a]) RUN_SAMPLE[a] = shuffle(act.data.slice());
+    cenario(RUN_SAMPLE[a], 0, function(){ runAct(a+1); });
   }
   else if(act.type==='ordena') ordena(act.data, function(){ runAct(a+1); });
   else if(act.type==='anamnese') anamnese(act.data, function(){ runAct(a+1); });
 }
 
-// Bancos grandes (≥20 perguntas): depois da 1ª metade, oferece continuar com o
-// restante agora mesmo, sem sair ou reiniciar o módulo.
-function ofereceMais(a, done){
-  var rest = RUN_SAMPLE_REST[a];
-  if(!rest || !rest.length){ done(); return; }
-  var m = MODS[S.mod];
-  var vistas = RUN_SAMPLE[a].length, total = vistas + rest.length;
-  PEND_MAIS = { a:a, done:done };
-  remember(function(){ ofereceMais(a, done); });
-  screen.innerHTML =
-   '<div class="card center">'+
-     navBar({modulo:true, mapa:true})+
-     '<span class="phase-badge">'+m.code+'</span>'+
-     '<h3>Você respondeu '+vistas+' de '+total+' casos deste módulo.</h3>'+
-     '<p class="muted">Quer continuar agora com os outros '+rest.length+' casos, sem sair do módulo? Isso ajuda a completar a cobertura do banco mais rápido.</p>'+
-     '<button class="btn" onclick="responderMais()">Responder mais '+rest.length+' perguntas ➜</button> '+
-     '<button class="btn ghost" onclick="pularMais()">Continuar sem responder agora</button>'+
-   '</div>';
-}
-function responderMais(){
-  var info = PEND_MAIS; if(!info) return; PEND_MAIS=null;
-  var restList = RUN_SAMPLE_REST[info.a]; delete RUN_SAMPLE_REST[info.a];
-  cenario(restList, 0, info.done);
-}
-function pularMais(){
-  var info = PEND_MAIS; if(!info) return; PEND_MAIS=null;
-  delete RUN_SAMPLE_REST[info.a];
-  info.done();
-}
 function dots(total, now){
   var h='<div class="progress-dots">';
   for(var i=0;i<total;i++) h+='<div class="dot '+(i<now?'done':i===now?'now':'')+'"></div>';
