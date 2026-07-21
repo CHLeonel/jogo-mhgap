@@ -161,6 +161,8 @@ var S = { trust:100, score:0, mod:0, done:{}, stars:{}, errors:[], combo:0, mist
 var MODE = 'normal';   // normal | recover | misto | rescue
 var PEND = [];         // cenários errados no módulo atual (rodada de recuperação)
 var RUN_SAMPLE = {};   // perguntas sorteadas do banco para a rodada atual do módulo
+var RUN_SAMPLE_REST = {}; // restante do banco (bancos grandes) para continuar sem reiniciar o módulo
+var PEND_MAIS = null;  // contexto pendente da tela "responder mais perguntas"
 var screen = document.getElementById('screen');
 
 /* ================= PERFIS (multijogador no mesmo computador) ================= */
@@ -2021,7 +2023,7 @@ function mapaGeral(){
 
 function introMod(i){
   S.mod=i;
-  MODE='normal'; PEND=[]; RUN_SAMPLE={}; // novo sorteio de perguntas a cada rodada do módulo
+  MODE='normal'; PEND=[]; RUN_SAMPLE={}; RUN_SAMPLE_REST={}; // novo sorteio de perguntas a cada rodada do módulo
   S.ft[i]={t:0,c:0}; // zera stats ao (re)começar o módulo
   // Novo paciente, novo vínculo: quem chegou com a confiança baixa recomeça de um patamar base
   var recomecou = S.trust < 70;
@@ -2058,17 +2060,53 @@ function runAct(a){
         var vist = S.vistos[S.mod] || {};
         var novas = act.data.filter(function(c){ return !vist[c.q]; });
         var antigas = act.data.filter(function(c){ return vist[c.q]; });
-        var sel = shuffle(novas).slice(0,4);
-        if(sel.length<4) sel = sel.concat(shuffle(antigas).slice(0, 4-sel.length));
+        // Bancos grandes (≥20): a rodada cobre metade do banco por vez, com opção
+        // de responder o restante na sequência, sem sair do módulo.
+        var qtd = act.data.length>=20 ? Math.ceil(act.data.length/2) : 4;
+        var sel = shuffle(novas).slice(0,qtd);
+        if(sel.length<qtd) sel = sel.concat(shuffle(antigas).slice(0, qtd-sel.length));
         RUN_SAMPLE[a] = sel;
+        if(act.data.length>=20){
+          var usados = {}; sel.forEach(function(c){ usados[c.q]=true; });
+          RUN_SAMPLE_REST[a] = shuffle(act.data.filter(function(c){ return !usados[c.q]; }));
+        }
       } else RUN_SAMPLE[a] = act.data;
     }
-    cenario(RUN_SAMPLE[a], 0, function(){ runAct(a+1); });
+    cenario(RUN_SAMPLE[a], 0, function(){ ofereceMais(a, function(){ runAct(a+1); }); });
   }
   else if(act.type==='ordena') ordena(act.data, function(){ runAct(a+1); });
   else if(act.type==='anamnese') anamnese(act.data, function(){ runAct(a+1); });
 }
 
+// Bancos grandes (≥20 perguntas): depois da 1ª metade, oferece continuar com o
+// restante agora mesmo, sem sair ou reiniciar o módulo.
+function ofereceMais(a, done){
+  var rest = RUN_SAMPLE_REST[a];
+  if(!rest || !rest.length){ done(); return; }
+  var m = MODS[S.mod];
+  var vistas = RUN_SAMPLE[a].length, total = vistas + rest.length;
+  PEND_MAIS = { a:a, done:done };
+  remember(function(){ ofereceMais(a, done); });
+  screen.innerHTML =
+   '<div class="card center">'+
+     navBar({modulo:true, mapa:true})+
+     '<span class="phase-badge">'+m.code+'</span>'+
+     '<h3>Você respondeu '+vistas+' de '+total+' casos deste módulo.</h3>'+
+     '<p class="muted">Quer continuar agora com os outros '+rest.length+' casos, sem sair do módulo? Isso ajuda a completar a cobertura do banco mais rápido.</p>'+
+     '<button class="btn" onclick="responderMais()">Responder mais '+rest.length+' perguntas ➜</button> '+
+     '<button class="btn ghost" onclick="pularMais()">Continuar sem responder agora</button>'+
+   '</div>';
+}
+function responderMais(){
+  var info = PEND_MAIS; if(!info) return; PEND_MAIS=null;
+  var restList = RUN_SAMPLE_REST[info.a]; delete RUN_SAMPLE_REST[info.a];
+  cenario(restList, 0, info.done);
+}
+function pularMais(){
+  var info = PEND_MAIS; if(!info) return; PEND_MAIS=null;
+  delete RUN_SAMPLE_REST[info.a];
+  info.done();
+}
 function dots(total, now){
   var h='<div class="progress-dots">';
   for(var i=0;i<total;i++) h+='<div class="dot '+(i<now?'done':i===now?'now':'')+'"></div>';
