@@ -892,7 +892,117 @@ var MODS = [
      {t:'Nunca: injetáveis de ação prolongada violam a autonomia do paciente.', ok:false,
       fb:'Com consentimento informado, o depósito pode ser o que mantém a pessoa estável e livre na comunidade — autonomia real inclui não recair.'}
     ],
-    licao:'Depósito: manutenção quando a adesão oral falha; nunca no início; evitar em gestantes e menores.'}
+    licao:'Depósito: manutenção quando a adesão oral falha; nunca no início; evitar em gestantes e menores.'},
+   {ctx:'<span class="who">Marina, 26 anos</span>: há 3 semanas afirma, com convicção inabalável, que colegas de trabalho "sussurram planos contra ela" — sem ouvir vozes, sem desorganização do discurso, comportamento preservado.',
+    q:'Ela preenche o critério do algoritmo para suspeitar de psicose?',
+    opts:[
+     {t:'Ainda não: falta um segundo critério (alucinações ou desorganização do discurso/comportamento) — são necessários pelo menos 2 dos 3 sintomas; considerar consulta a especialista para outras causas.', ok:true,
+      fb:'PSI 1, passo 3: psicose exige ≥ 2 de delírios, alucinações e desorganização do discurso/comportamento. Com só o delírio isolado, considere especialista para investigar outras causas antes de rotular.'},
+     {t:'Sim: uma crença fixa e não compartilhada pela cultura já basta para diagnosticar e iniciar antipsicótico.', ok:false,
+      fb:'Um delírio isolado não fecha o critério do algoritmo, que exige ao menos 2 dos 3 sintomas. Isso evita rotular e medicar precocemente.'},
+     {t:'Não, e o comportamento preservado descarta qualquer condição MNS.', ok:false,
+      fb:'Comportamento preservado não descarta condição MNS: mesmo sem os critérios completos de psicose, o quadro merece investigação e seguimento.'}
+    ],
+    licao:'Psicose exige ≥ 2 de: delírios, alucinações, desorganização do discurso/comportamento — 1 isolado não fecha o critério.'},
+   {ctx:'Antes de encerrar a consulta, você faz a psicoeducação de Davi e da família sobre a psicose.',
+    q:'Quais mensagens essenciais o módulo recomenda?',
+    opts:[
+     {t:'Explicar que é uma condição de saúde mental tratável e que a recuperação é possível, sem culpar a pessoa ou a família, orientando a reconhecer precocemente sinais de recaída para buscar ajuda logo.', ok:true,
+      fb:'PSI 2.1 — psicoeducação: tratável, recuperação possível, sem culpabilizar; reconhecer precocemente o reaparecimento ou piora dos sintomas e procurar o serviço o quanto antes.'},
+     {t:'"Psicose é uma sentença com poucas esperanças de melhora; o foco deve ser apenas conter os sintomas."', ok:false,
+      fb:'Contradiz o módulo: a mensagem central é de esperança realista — condição tratável, com possibilidade de recuperação.'},
+     {t:'Evitar comentar sinais de recaída com a família, para não gerar ansiedade antecipatória.', ok:false,
+      fb:'É o oposto: reconhecer precocemente sinais de recaída é mensagem central — permite buscar ajuda antes de uma crise maior.'}
+    ],
+    licao:'Psicoeducação PSI: condição tratável, sem culpa, reconhecimento precoce de sinais de recaída.'},
+   {ctx:'Beatriz, estabilizada após o episódio maníaco, pergunta sobre hábitos de vida no dia a dia.',
+    q:'O que orientar, segundo o módulo?',
+    opts:[
+     {t:'Estilo de vida saudável (alimentação equilibrada, atividade física, sono regular, boa higiene), evitar álcool e cânabis, e ter cautela em decisões importantes (financeiras, compromissos), sobretudo em fases de mais energia.', ok:true,
+      fb:'PSI 2.2: álcool e cânabis podem agravar sintomas psicóticos/bipolares; rotina regular evita privação de sono (gatilho de mania); decisões impulsivas pedem cautela.'},
+     {t:'Evitar apenas bebidas alcoólicas; cânabis não interfere no transtorno bipolar.', ok:false,
+      fb:'O módulo recomenda evitar TAMBÉM cânabis, que pode agravar sintomas psicóticos e bipolares — não somente o álcool.'},
+     {t:'Sem restrição de substâncias: o essencial é manter a medicação em dia.', ok:false,
+      fb:'Álcool e cânabis agravam sintomas mesmo com boa adesão medicamentosa — orientação explícita do módulo para evitá-los.'}
+    ],
+    licao:'PSI 2.2: evitar álcool e cânabis, manter rotina regular de sono, cautela em decisões importantes.'},
+   {ctx:'A família de Davi pergunta se ele deve se afastar do trabalho "para descansar da doença".',
+    q:'O que orienta o PSI sobre o funcionamento diário?',
+    opts:[
+     {t:'Manter, tanto quanto possível, as atividades sociais, educacionais e ocupacionais regulares — é melhor que a pessoa tenha emprego ou ocupação produtiva, com treinamento de habilidades quando necessário.', ok:true,
+      fb:'PSI 2.3: facilitar inclusão em atividades econômicas e oferecer capacitação de habilidades de vida/sociais, favorecendo a vida independente na comunidade.'},
+     {t:'Sim: afastar-se do trabalho e das atividades sociais até a remissão completa dos sintomas.', ok:false,
+      fb:'O afastamento total tende a piorar o funcionamento e o isolamento — o módulo recomenda manter atividades regulares sempre que possível.'},
+     {t:'Só depois de 1 ano de estabilidade comprovada é que se pode considerar retomar atividades.', ok:false,
+      fb:'Não há essa exigência de tempo: a promoção do funcionamento começa assim que possível, de forma gradual e apoiada.'}
+    ],
+    licao:'PSI 2.3: manter atividades sociais, educacionais e ocupacionais regulares sempre que possível.'},
+   {ctx:'Equipe discute iniciar lítio em paciente com transtorno bipolar recém-diagnosticado, numa unidade sem laboratório disponível.',
+    q:'É apropriado?',
+    opts:[
+     {t:'Não: lítio só deve ser considerado 1ª linha se houver possibilidade de monitoramento clínico e laboratorial; sem isso, prefira valproato ou carbamazepina.', ok:true,
+      fb:'PSI — Tabela 3: sem exames (função renal, tireoidiana, hemograma, ECG, teste de gravidez), não se deve administrar lítio; fornecimento irregular também contraindica.'},
+     {t:'Sim: lítio é sempre a melhor escolha, independentemente da disponibilidade de exames.', ok:false,
+      fb:'O manual condiciona o lítio à possibilidade de monitoramento — sem isso, valproato ou carbamazepina são preferíveis.'},
+     {t:'Sim, desde que se inicie com dose baixa e se aumente lentamente; exames não são obrigatórios.', ok:false,
+      fb:'A dose baixa não substitui o monitoramento laboratorial — a janela terapêutica estreita do lítio torna os exames indispensáveis.'}
+    ],
+    licao:'Lítio 1ª linha só com monitoramento clínico-laboratorial possível; sem isso, valproato ou carbamazepina.'},
+   {ctx:'Mesma unidade, sem estrutura para monitorar lítio ou valproato, com paciente em episódio maníaco.',
+    q:'Qual alternativa farmacológica o módulo permite?',
+    opts:[
+     {t:'Considerar haloperidol ou risperidona (a risperidona pode ser preferida se disponibilidade e custo permitirem) — indicados justamente quando lítio/valproato não podem ser monitorados.', ok:true,
+      fb:'PSI — Tabela 3: haloperidol e risperidona são opções quando lítio ou valproato não podem ser monitorados clínica ou laboratorialmente.'},
+     {t:'Nenhuma: sem lítio ou valproato, não há tratamento farmacológico possível para a mania.', ok:false,
+      fb:'Há alternativa: haloperidol ou risperidona cobrem justamente os cenários sem estrutura para monitorar lítio/valproato.'},
+     {t:'Fluoxetina em dose baixa, para reduzir a agitação sem risco de mania.', ok:false,
+      fb:'Antidepressivo é o oposto do indicado na mania — pode desencadear ou agravar o próprio episódio maníaco.'}
+    ],
+    licao:'Sem monitoramento de lítio/valproato: haloperidol ou risperidona são as alternativas do módulo.'},
+   {ctx:'Paciente em episódio maníaco com agitação intensa recebe diazepam associado ao estabilizador do humor.',
+    q:'Por quanto tempo manter o benzodiazepínico?',
+    opts:[
+     {t:'No máximo 2 a 4 semanas, com retirada gradual assim que os sintomas melhorarem — o uso prolongado traz risco de tolerância.', ok:true,
+      fb:'PSI 2.6: benzodiazepínico em curto prazo (2–4 semanas no máximo) para controle comportamental/agitação, retirado gradualmente com a melhora.'},
+     {t:'Como manutenção contínua, junto ao estabilizador, enquanto durar o tratamento do transtorno bipolar.', ok:false,
+      fb:'Uso contínuo não é a indicação: o benzodiazepínico é medida de curto prazo, pelo risco de tolerância e dependência.'},
+     {t:'Por até 6 meses, tempo considerado necessário para o estabilizador atingir seu efeito pleno.', ok:false,
+      fb:'Muito além do recomendado: o limite é de 2 a 4 semanas, com retirada gradual conforme a melhora dos sintomas.'}
+    ],
+    licao:'Benzodiazepínico na mania: no máximo 2–4 semanas, retirada gradual — nunca manutenção contínua.'},
+   {ctx:'<span class="who">Davi</span>, em risperidona há 3 meses, ganhou 8 kg e a glicemia de jejum subiu.',
+    q:'Como interpretar e conduzir?',
+    opts:[
+     {t:'Alteração metabólica conhecida dos antipsicóticos (ganho de peso, hiperglicemia): reforçar orientação de estilo de vida e monitorar periodicamente peso, glicemia e colesterol, ponderando o perfil de efeitos colaterais do fármaco.', ok:true,
+      fb:'PSI 2.5 — monitorar peso, PA, glicemia de jejum e colesterol em quem usa antipsicótico; alterações metabólicas fazem parte do perfil de efeitos colaterais a vigiar.'},
+     {t:'Coincidência sem relação com o medicamento: investigar apenas causas endócrinas independentes.', ok:false,
+      fb:'Antipsicóticos causam alterações metabólicas conhecidas — ignorar essa relação atrasa o manejo (estilo de vida, escolha do fármaco).'},
+     {t:'Suspender a risperidona de imediato, já que qualquer ganho de peso contraindica antipsicóticos.', ok:false,
+      fb:'Suspensão abrupta arrisca recaída psicótica. A resposta é monitorar, orientar hábitos saudáveis e ponderar o perfil de efeitos — não suspender por si só.'}
+    ],
+    licao:'Antipsicóticos: monitorar peso, glicemia e colesterol — alterações metabólicas são efeito colateral conhecido.'},
+   {ctx:'<span class="who">Idosa de 82 anos com demência</span> apresenta sintomas psicóticos leves (crença de que "roubam" seus pertences).',
+    q:'Antes de prescrever antipsicótico, o que considerar?',
+    opts:[
+     {t:'Os antipsicóticos aumentam o risco de eventos cerebrovasculares e morte em idosos com psicose relacionada à demência: usar apenas se necessário, na menor dose eficaz, priorizando primeiro medidas não farmacológicas.', ok:true,
+      fb:'PSI — Atenção: risco aumentado de AVC e morte em idosos com psicose associada à demência; populações especiais pedem doses menores e atenção a interações medicamentosas.'},
+     {t:'Nenhum cuidado adicional: a prescrição em idosos segue exatamente o mesmo protocolo dos adultos jovens.', ok:false,
+      fb:'Idosos são população especial: risco real de eventos cerebrovasculares e morte com antipsicóticos na psicose por demência exige cautela extra.'},
+     {t:'Aumentar a dose além do habitual, já que idosos metabolizam mais lentamente e precisam de doses maiores para o mesmo efeito.', ok:false,
+      fb:'É o oposto: doses MENORES em idosos, com atenção redobrada a interações medicamentosas.'}
+    ],
+    licao:'Antipsicótico em idoso com demência: risco de AVC e morte — menor dose eficaz, não farmacológico primeiro.'},
+   {ctx:'A família de um paciente psicótico agitado, mas sem risco iminente, pergunta se deve trancá-lo no quarto "para segurança de todos".',
+    q:'O que orienta o módulo sobre liberdade de movimento?',
+    opts:[
+     {t:'Dar à pessoa liberdade de movimento, evitando restringi-la desnecessariamente — garantindo, ao mesmo tempo, a segurança básica dela e de outras pessoas, com apoio dos serviços de saúde.', ok:true,
+      fb:'PSI 2.4 — orientação geral: liberdade de movimento, evitar restrição, garantindo segurança básica; evitar hospitalização prolongada, priorizando ambiente acolhedor e familiar.'},
+     {t:'Sim: trancar em casa é a forma mais segura e recomendada de conter a agitação psicótica sem internação.', ok:false,
+      fb:'Contradiz o módulo: restringir o movimento sem necessidade real de segurança fere a dignidade — buscar apoio do serviço de saúde é o caminho recomendado.'},
+     {t:'Não cabe orientação da unidade de saúde sobre isso: é decisão exclusivamente da família.', ok:false,
+      fb:'O módulo orienta explicitamente sobre isso — é papel do profissional orientar a família sobre liberdade de movimento e segurança, parte do cuidado com dignidade (PCE/PSI).'}
+    ],
+    licao:'PSI 2.4: liberdade de movimento, evitar restrição desnecessária, garantindo segurança básica.'}
   ]}
 ]},
 
