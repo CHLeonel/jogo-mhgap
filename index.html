@@ -2060,16 +2060,16 @@ function runAct(a){
         var vist = S.vistos[S.mod] || {};
         var novas = act.data.filter(function(c){ return !vist[c.q]; });
         var antigas = act.data.filter(function(c){ return vist[c.q]; });
-        // Bancos grandes (≥20): a rodada cobre metade do banco por vez, com opção
-        // de responder o restante na sequência, sem sair do módulo.
-        var qtd = act.data.length>=20 ? Math.ceil(act.data.length/2) : 4;
+        // A rodada cobre metade do banco por vez, com opção de responder
+        // o restante na sequência, sem sair do módulo (vale para todo módulo
+        // com banco >5 perguntas — quanto maior o banco, mais isso ajuda).
+        var qtd = Math.ceil(act.data.length/2);
         var sel = shuffle(novas).slice(0,qtd);
         if(sel.length<qtd) sel = sel.concat(shuffle(antigas).slice(0, qtd-sel.length));
         RUN_SAMPLE[a] = sel;
-        if(act.data.length>=20){
-          var usados = {}; sel.forEach(function(c){ usados[c.q]=true; });
-          RUN_SAMPLE_REST[a] = shuffle(act.data.filter(function(c){ return !usados[c.q]; }));
-        }
+        var usados = {}; sel.forEach(function(c){ usados[c.q]=true; });
+        var resto = shuffle(act.data.filter(function(c){ return !usados[c.q]; }));
+        if(resto.length) RUN_SAMPLE_REST[a] = resto;
       } else RUN_SAMPLE[a] = act.data;
     }
     cenario(RUN_SAMPLE[a], 0, function(){ ofereceMais(a, function(){ runAct(a+1); }); });
