@@ -1,0 +1,2382 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Missão mhGAP — O Jogo Completo</title>
+<style>
+  :root{
+    --navy:#0d2c54; --navy2:#123a6d; --blue:#1d5ba6; --lightblue:#e8f0fa;
+    --green:#1e8a4c; --greenbg:#e5f5ec; --red:#c62828; --redbg:#fdeaea;
+    --amber:#e6a817; --ink:#1c2733; --gray:#5c6b7a; --card:#ffffff;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:'Segoe UI', system-ui, -apple-system, Arial, sans-serif; background:linear-gradient(160deg,#0d2c54 0%,#123a6d 60%,#1d5ba6 100%); min-height:100vh; color:var(--ink);}
+  #app{max-width:880px; margin:0 auto; padding:16px;}
+  .topbar{display:flex; align-items:center; gap:14px; color:#fff; padding:10px 4px; flex-wrap:wrap;}
+  .topbar h1{font-size:1.05rem; font-weight:600; letter-spacing:.3px; flex:1; min-width:220px;}
+  .meter-wrap{display:flex; align-items:center; gap:8px; font-size:.8rem;}
+  .meter{width:150px; height:14px; background:rgba(255,255,255,.25); border-radius:8px; overflow:hidden;}
+  .meter-fill{height:100%; width:100%; background:linear-gradient(90deg,#e6a817,#3ecf6f); transition:width .5s;}
+  .pill{background:rgba(255,255,255,.15); border-radius:20px; padding:4px 12px; font-size:.8rem;}
+  .pill.combo{background:#ff8f00; font-weight:700; animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+  .card{background:var(--card); border-radius:16px; padding:28px; box-shadow:0 8px 30px rgba(0,0,0,.25); margin-top:12px; animation:fadeIn .4s; position:relative; overflow:hidden;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;}}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+  .shake{animation:shake .3s;}
+  h2{color:var(--navy); font-size:1.35rem; margin-bottom:6px;}
+  h3{color:var(--blue); font-size:1.05rem; margin:14px 0 8px;}
+  p{line-height:1.55; margin-bottom:10px;}
+  .muted{color:var(--gray); font-size:.9rem;}
+  .scenario{background:var(--lightblue); border-left:5px solid var(--blue); border-radius:10px; padding:14px 16px; margin:14px 0; line-height:1.55;}
+  .scenario .who{font-weight:700; color:var(--navy);}
+  .vinculo{border-radius:10px; padding:10px 14px; margin:10px 0; font-size:.85rem; line-height:1.5;}
+  .vinculo.alto{background:var(--greenbg); border:1px dashed var(--green);}
+  .vinculo.baixo{background:var(--redbg); border:1px dashed var(--red);}
+  .opts{display:flex; flex-direction:column; gap:10px; margin-top:14px;}
+  button{font-family:inherit; font-size:.95rem; cursor:pointer;}
+  .opt{background:#fff; border:2px solid #cfd9e6; border-radius:12px; padding:13px 16px; text-align:left; line-height:1.45; transition:all .15s;}
+  .opt:hover:not(:disabled){border-color:var(--blue); background:var(--lightblue); transform:translateY(-1px);}
+  .opt:disabled{cursor:default; opacity:.85;}
+  .opt.correct{border-color:var(--green); background:var(--greenbg);}
+  .opt.wrong{border-color:var(--red); background:var(--redbg);}
+  .opt.eliminated{opacity:.35; text-decoration:line-through;}
+  .feedback{border-radius:12px; padding:14px 16px; margin-top:14px; line-height:1.5; animation:fadeIn .3s;}
+  .feedback.good{background:var(--greenbg); border:1px solid var(--green);}
+  .feedback.bad{background:var(--redbg); border:1px solid var(--red);}
+  .feedback .tag{font-weight:700; display:block; margin-bottom:4px;}
+  .feedback.good .tag{color:var(--green);}
+  .feedback.bad .tag{color:var(--red);}
+  .src{display:block; margin-top:8px; font-size:.8rem; color:var(--gray); font-style:italic;}
+  .btn{background:var(--navy); color:#fff; border:none; border-radius:24px; padding:12px 28px; font-size:1rem; font-weight:600; margin-top:18px; transition:all .15s;}
+  .btn:hover{background:var(--blue); transform:translateY(-1px);}
+  .btn.ghost{background:#fff; color:var(--navy); border:2px solid var(--navy);}
+  .btn.hint{background:var(--amber); color:#5b4200; padding:8px 18px; font-size:.85rem;}
+  .center{text-align:center;}
+  .phase-badge{display:inline-block; background:var(--navy); color:#fff; border-radius:16px; padding:3px 14px; font-size:.75rem; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px;}
+  .phase-badge.recover{background:#8e24aa;}
+  .phase-badge.misto{background:#e65100;}
+  .phase-badge.rescue{background:var(--red);}
+  .progress-dots{display:flex; gap:6px; margin:10px 0; flex-wrap:wrap;}
+  .dot{width:10px; height:10px; border-radius:50%; background:#cfd9e6;}
+  .dot.done{background:var(--green);}
+  .dot.now{background:var(--amber);}
+  .order-pool{display:flex; flex-wrap:wrap; gap:10px; margin-top:14px;}
+  .order-pool .opt{flex:1 1 45%; min-width:220px;}
+  .order-pool .opt.locked{border-color:var(--green); background:var(--greenbg); cursor:default;}
+  .order-pool .opt .num{display:inline-block; background:var(--green); color:#fff; border-radius:50%; width:22px; height:22px; text-align:center; line-height:22px; font-size:.8rem; margin-right:8px; font-weight:700;}
+  .dica{background:#f4f4f4; border-left:5px solid var(--red); border-radius:8px; padding:12px 14px; margin:14px 0; font-size:.9rem; line-height:1.5;}
+  .dica b{color:var(--red);}
+  .badges{display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin:18px 0;}
+  .badge{background:var(--lightblue); border:2px solid var(--blue); border-radius:14px; padding:12px 14px; text-align:center; width:140px;}
+  .badge.off{opacity:.35; filter:grayscale(1);}
+  .badge .emoji{font-size:1.7rem;}
+  .badge .name{font-size:.75rem; font-weight:700; color:var(--navy); margin-top:4px;}
+  .badge .stars{color:var(--amber); font-size:.9rem;}
+  .score-big{font-size:3rem; font-weight:800; color:var(--navy);}
+  .review{background:var(--lightblue); border-radius:12px; padding:14px 16px; margin:8px 0; font-size:.9rem; line-height:1.5; text-align:left;}
+  .review b{color:var(--navy);}
+  /* Mapa geral */
+  .mg-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; margin-top:16px;}
+  .mg-mod{background:#fff; border:2px solid #cfd9e6; border-radius:14px; padding:16px; text-align:left; transition:all .15s; position:relative;}
+  .mg-mod:hover{border-color:var(--blue); transform:translateY(-2px); box-shadow:0 6px 16px rgba(13,44,84,.15);}
+  .mg-mod.done{border-color:var(--green); background:var(--greenbg);}
+  .mg-mod .code{display:inline-block; background:var(--navy); color:#fff; border-radius:8px; padding:2px 10px; font-size:.75rem; font-weight:700; letter-spacing:1px;}
+  .mg-mod.done .code{background:var(--green);}
+  .mg-mod .emoji{font-size:1.6rem; float:right;}
+  .mg-mod .nm{font-weight:700; color:var(--navy); margin:8px 0 4px; font-size:.95rem;}
+  .mg-mod .ds{font-size:.8rem; color:var(--gray); line-height:1.4;}
+  .mg-mod .stars{color:var(--amber); font-size:1rem; position:absolute; bottom:8px; right:12px;}
+  .mg-mod .check{position:absolute; top:-9px; right:-9px; background:var(--green); color:#fff; width:26px; height:26px; border-radius:50%; text-align:center; line-height:26px; font-weight:700; display:none;}
+  .mg-mod.done .check{display:block;}
+  /* Biblioteca (fichas-resumo) */
+  details.fich{background:var(--lightblue); border-radius:12px; padding:10px 16px; margin:8px 0;}
+  details.fich summary{font-weight:700; color:var(--navy); cursor:pointer; padding:6px 0; font-size:1rem;}
+  details.fich .fbody{font-size:.9rem; line-height:1.6; padding:8px 0 4px;}
+  details.fich .fbody b{color:var(--navy);}
+  /* Perfis */
+  .perfil-row{display:flex; align-items:center; gap:12px; background:#fff; border:2px solid #cfd9e6; border-radius:14px; padding:14px 16px; margin:10px 0; transition:all .15s; text-align:left; width:100%;}
+  .perfil-row:hover{border-color:var(--blue); background:var(--lightblue); transform:translateY(-1px);}
+  .perfil-row .avatar{font-size:1.6rem;}
+  .perfil-row .pinfo{flex:1;}
+  .perfil-row .pnome{font-weight:700; color:var(--navy);}
+  .perfil-row .pprog{font-size:.8rem; color:var(--gray);}
+  .perfil-del{background:none; border:none; color:var(--red); font-size:1.1rem; padding:6px 10px; border-radius:8px;}
+  .perfil-del:hover{background:var(--redbg);}
+  .perfil-novo{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;}
+  .perfil-novo input{flex:1; min-width:200px; border:2px solid #cfd9e6; border-radius:12px; padding:12px 16px; font-family:inherit; font-size:1rem;}
+  .perfil-novo input:focus{outline:none; border-color:var(--blue);}
+  /* Navegação */
+  .navbar{display:flex; gap:8px; flex-wrap:wrap; margin:-6px 0 14px;}
+  .navbtn{background:#f0f4fa; border:1px solid #cfd9e6; border-radius:18px; padding:6px 14px; font-size:.8rem; color:var(--navy); font-weight:600; transition:all .15s;}
+  .navbtn:hover{background:var(--lightblue); border-color:var(--blue); transform:translateY(-1px);}
+  .navbtn:disabled{opacity:.4; cursor:default; transform:none;}
+  /* Anamnese */
+  .ana-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:10px; margin-top:12px;}
+  .ana-grid .opt{min-height:70px;}
+  .ana-grid .opt.asked-good{border-color:var(--green); background:var(--greenbg); cursor:default;}
+  .ana-grid .opt.asked-bad{border-color:var(--red); background:var(--redbg); cursor:default;}
+  .ana-log{margin-top:12px;}
+  .ana-resp{border-radius:10px; padding:10px 14px; margin:6px 0; font-size:.9rem; line-height:1.5; animation:fadeIn .3s;}
+  .ana-resp.good{background:var(--greenbg); border-left:4px solid var(--green);}
+  .ana-resp.bad{background:var(--redbg); border-left:4px solid var(--red);}
+  .ana-counter{display:inline-block; background:var(--navy); color:#fff; border-radius:14px; padding:4px 12px; font-size:.8rem; font-weight:700;}
+  /* Pontos flutuantes e confete */
+  .scorepop{position:absolute; top:18px; right:24px; font-size:1.3rem; font-weight:800; color:var(--green); animation:popup 1.1s forwards; pointer-events:none; z-index:5;}
+  @keyframes popup{0%{opacity:0; transform:translateY(8px);}25%{opacity:1;}100%{opacity:0; transform:translateY(-28px);}}
+  .confetti{position:absolute; top:-20px; font-size:1.2rem; animation:fall 2.4s linear forwards; pointer-events:none; z-index:4;}
+  @keyframes fall{to{transform:translateY(120vh) rotate(360deg); opacity:.2;}}
+  /* Leitura em voz alta */
+  #ttsBtn{position:fixed; bottom:18px; right:18px; z-index:50; background:var(--navy); color:#fff; border:none; border-radius:30px; padding:12px 20px; font-size:.95rem; font-weight:700; box-shadow:0 6px 18px rgba(0,0,0,.35); transition:all .15s;}
+  #ttsBtn:hover{background:var(--blue); transform:translateY(-1px);}
+  #ttsBtn.falando{background:var(--red); animation:pulse 1.2s infinite;}
+  @media(max-width:600px){ .card{padding:18px;} .order-pool .opt{flex:1 1 100%;} }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <h1>🩺 Missão mhGAP · O Jogo Completo</h1>
+    <div class="meter-wrap" id="trustWrap" style="display:none">
+      <span>Confiança do paciente</span>
+      <div class="meter"><div class="meter-fill" id="trustFill"></div></div>
+      <span id="trustVal">100</span>
+    </div>
+    <div class="pill" id="playerPill" style="display:none">👤 <span id="playerName"></span></div>
+    <div class="pill combo" id="comboPill" style="display:none">🔥 Combo ×2</div>
+    <div class="pill" id="scorePill" style="display:none">⭐ <span id="scoreVal">0</span> pts</div>
+    <button class="pill" id="muteBtn" style="border:none; cursor:pointer;" onclick="toggleMute()" title="Ativar/desativar som">🔊</button>
+  </div>
+  <div id="screen"></div>
+</div>
+<button id="ttsBtn" onclick="ouvirTela()" title="Ler em voz alta o texto desta tela">🗣️ Ouvir</button>
+
+<script>
+'use strict';
+/* ================= ESTADO ================= */
+var S = { trust:100, score:0, mod:0, done:{}, stars:{}, errors:[], combo:0, misto:false,
+          ft:{}, /* primeira tentativa por módulo: {t: total, c: corretas} */
+          vistos:{} /* perguntas já vistas por módulo (sorteio sem reposição + cobertura) */ };
+var MODE = 'normal';   // normal | recover | misto | rescue
+var PEND = [];         // cenários errados no módulo atual (rodada de recuperação)
+var RUN_SAMPLE = {};   // perguntas sorteadas do banco para a rodada atual do módulo
+var screen = document.getElementById('screen');
+
+/* ================= PERFIS (multijogador no mesmo computador) ================= */
+var PERFIS_KEY = 'mhgap_perfis';
+var LEGACY_KEY = 'mhgap_jogo_v2';
+var PERFIL = null; // {id, nome}
+
+function saveKey(){ return PERFIL ? 'mhgap_save_'+PERFIL.id : LEGACY_KEY; }
+function listarPerfis(){
+  try{ var d = localStorage.getItem(PERFIS_KEY); return d ? JSON.parse(d) : []; }catch(e){ return []; }
+}
+function gravarPerfis(lista){ try{ localStorage.setItem(PERFIS_KEY, JSON.stringify(lista)); }catch(e){} }
+function criarPerfil(nome){
+  var lista = listarPerfis();
+  var p = { id: Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36), nome: nome };
+  lista.push(p); gravarPerfis(lista);
+  return p;
+}
+function excluirPerfil(id){
+  gravarPerfis(listarPerfis().filter(function(p){ return p.id!==id; }));
+  try{ localStorage.removeItem('mhgap_save_'+id); }catch(e){}
+  if(PERFIL && PERFIL.id===id) PERFIL=null;
+}
+function migrarLegacy(){
+  // Se havia um save antigo (antes dos perfis), transforma em "Jogador(a) 1"
+  try{
+    var antigo = localStorage.getItem(LEGACY_KEY);
+    if(antigo && listarPerfis().length===0){
+      var p = criarPerfil('Jogador(a) 1');
+      localStorage.setItem('mhgap_save_'+p.id, antigo);
+      localStorage.removeItem(LEGACY_KEY);
+    }
+  }catch(e){}
+}
+function setPlayerPill(){
+  var pill = document.getElementById('playerPill');
+  if(PERFIL){ document.getElementById('playerName').textContent = PERFIL.nome; pill.style.display='block'; }
+  else pill.style.display='none';
+}
+function resumoPerfil(p){
+  try{
+    var d = localStorage.getItem('mhgap_save_'+p.id);
+    if(!d) return 'novo — sem progresso';
+    d = JSON.parse(d);
+    var mods = 0; for(var k in (d.done||{})) if(d.done[k]) mods++;
+    var stars = 0; for(var j in (d.stars||{})) stars += d.stars[j];
+    return mods+'/'+TOTAL_MODS+' módulos · '+(d.score||0)+' pts · '+stars+'★';
+  }catch(e){ return ''; }
+}
+
+/* ================= UTILITÁRIOS ================= */
+function setTrust(d){
+  S.trust = Math.max(0, Math.min(100, S.trust + d));
+  document.getElementById('trustFill').style.width = S.trust + '%';
+  document.getElementById('trustVal').textContent = S.trust;
+}
+function addScore(n){ S.score += n; document.getElementById('scoreVal').textContent = S.score; }
+function scorePop(n){
+  var card = document.querySelector('.card'); if(!card) return;
+  var el = document.createElement('div');
+  el.className='scorepop'; el.textContent = '+'+n+(S.combo>=3?' 🔥':'');
+  card.appendChild(el); setTimeout(function(){ el.remove(); }, 1100);
+}
+function setCombo(v){
+  S.combo = v;
+  document.getElementById('comboPill').style.display = (S.combo>=3 && MODE!=='rescue') ? 'block' : 'none';
+}
+function trustTier(){ return S.trust>=70 ? 'alto' : (S.trust>=40 ? 'medio' : 'baixo'); }
+function logErr(fase, resumo, licao){ S.errors.push({fase:fase, resumo:resumo, licao:licao}); }
+function showHud(v){
+  document.getElementById('trustWrap').style.display = v ? 'flex' : 'none';
+  document.getElementById('scorePill').style.display = v ? 'block' : 'none';
+  if(!v) document.getElementById('comboPill').style.display='none';
+}
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t;} return a; }
+
+/* ---- som (WebAudio, sem arquivos externos) ---- */
+var AC = null;
+var MUTED = false;
+try{ MUTED = localStorage.getItem('mhgap_mute')==='1'; }catch(e){}
+function toggleMute(){
+  MUTED = !MUTED;
+  try{ localStorage.setItem('mhgap_mute', MUTED?'1':'0'); }catch(e){}
+  var b = document.getElementById('muteBtn');
+  if(b) b.textContent = MUTED ? '🔇' : '🔊';
+}
+function tone(freq, dur, delay, type, vol){
+  if(MUTED) return;
+  try{
+    if(!AC) AC = new (window.AudioContext||window.webkitAudioContext)();
+    var o = AC.createOscillator(), g = AC.createGain();
+    o.type = type||'sine'; o.frequency.value = freq;
+    g.gain.value = vol||0.08;
+    o.connect(g); g.connect(AC.destination);
+    var t0 = AC.currentTime + (delay||0);
+    o.start(t0); g.gain.setValueAtTime(vol||0.08, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0+dur);
+    o.stop(t0+dur+0.05);
+  }catch(e){}
+}
+/* ---- leitura em voz alta (Web Speech API) ---- */
+var TTS_OK = ('speechSynthesis' in window) && (typeof SpeechSynthesisUtterance !== 'undefined');
+var VOZ_PT = null;
+function escolherVoz(){
+  try{
+    var vozes = window.speechSynthesis.getVoices() || [];
+    for(var i=0;i<vozes.length;i++){
+      if((vozes[i].lang||'').toLowerCase().indexOf('pt-br')===0){ VOZ_PT=vozes[i]; return; }
+    }
+    for(var j=0;j<vozes.length;j++){
+      if((vozes[j].lang||'').toLowerCase().indexOf('pt')===0){ VOZ_PT=vozes[j]; return; }
+    }
+  }catch(e){}
+}
+if(TTS_OK){
+  escolherVoz();
+  try{ window.speechSynthesis.onvoiceschanged = escolherVoz; }catch(e){}
+}
+function textoDaTela(){
+  var card = document.querySelector('.card');
+  if(!card) return '';
+  var clone = card.cloneNode(true);
+  // remove o que não é conteúdo: navegação, pop-ups de pontos, confetes
+  var lixo = clone.querySelectorAll('.navbar, .scorepop, .confetti, #hintBtn');
+  for(var i=0;i<lixo.length;i++) lixo[i].parentNode.removeChild(lixo[i]);
+  var t = clone.innerText || clone.textContent || '';
+  // limpa emojis, setas e símbolos que a voz leria de forma estranha
+  t = t.replace(/[\u{1F000}-\u{1FAFF}\u{2190}-\u{21FF}\u{2300}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{2000}-\u{206F}]/gu, ' ');
+  t = t.replace(/[➜»✔✘★☆·×]/g, ' ');
+  t = t.replace(/\s+/g, ' ').trim();
+  return t;
+}
+function pararFala(){
+  if(!TTS_OK) return;
+  try{ window.speechSynthesis.cancel(); }catch(e){}
+  var b = document.getElementById('ttsBtn');
+  if(b){ b.classList.remove('falando'); b.innerHTML='🗣️ Ouvir'; }
+}
+function ouvirTela(){
+  if(!TTS_OK) return;
+  var synth = window.speechSynthesis;
+  if(synth.speaking || synth.pending){ pararFala(); return; }
+  var texto = textoDaTela();
+  if(!texto) return;
+  var u = new SpeechSynthesisUtterance(texto);
+  u.lang = 'pt-BR';
+  if(VOZ_PT) u.voice = VOZ_PT;
+  u.rate = 1; u.pitch = 1;
+  u.onend = pararFala;
+  u.onerror = pararFala;
+  var b = document.getElementById('ttsBtn');
+  if(b){ b.classList.add('falando'); b.innerHTML='⏹ Parar leitura'; }
+  try{ synth.speak(u); }catch(e){ pararFala(); }
+}
+
+function sndOk(){ tone(660,.12,0); tone(880,.16,.1); }
+function sndErr(){ tone(180,.25,0,'square',0.05); }
+function sndBadge(){ tone(523,.12,0); tone(659,.12,.11); tone(784,.12,.22); tone(1047,.3,.33); }
+function confete(){
+  var card = document.querySelector('.card'); if(!card) return;
+  var emo=['🎉','⭐','🎊','✨','🏅'];
+  for(var i=0;i<22;i++){
+    var el=document.createElement('div');
+    el.className='confetti';
+    el.textContent=emo[Math.floor(Math.random()*emo.length)];
+    el.style.left=(Math.random()*95)+'%';
+    el.style.animationDelay=(Math.random()*0.7)+'s';
+    card.appendChild(el);
+    setTimeout(function(x){return function(){x.remove();};}(el), 3200);
+  }
+}
+
+/* ---- persistência ---- */
+function salvar(){
+  if(!PERFIL) return;
+  try{ localStorage.setItem(saveKey(), JSON.stringify({
+    trust:S.trust, score:S.score, done:S.done, stars:S.stars,
+    errors:S.errors, misto:S.misto, ft:S.ft, vistos:S.vistos })); }catch(e){}
+}
+function carregar(){
+  if(!PERFIL) return null;
+  try{ var d = localStorage.getItem(saveKey()); return d ? JSON.parse(d) : null; }catch(e){ return null; }
+}
+function apagarSave(){ try{ localStorage.removeItem(saveKey()); }catch(e){} }
+
+/* ================= NAVEGAÇÃO ================= */
+var HIST = [];
+var NAVIGATING = false;
+function remember(f){ if(!NAVIGATING) HIST.push(f); }
+function goBack(){
+  if(HIST.length>1){
+    HIST.pop();
+    var f = HIST[HIST.length-1];
+    NAVIGATING = true; f(); NAVIGATING = false;
+  }
+}
+function reiniciarJogo(){
+  if(confirm('Reiniciar o jogo? Pontuação, medalhas e progresso salvos serão zerados.')){ apagarSave(); startGame(); }
+}
+function reiniciarModulo(){
+  if(confirm('Reiniciar este módulo desde o começo?')) introMod(S.mod);
+}
+function navBar(opts){
+  opts = opts || {};
+  var h = '<div class="navbar">';
+  h += '<button class="navbtn" onclick="goBack()"'+(HIST.length<=1?' disabled':'')+'>↩ Voltar</button>';
+  if(opts.modulo) h += '<button class="navbtn" onclick="reiniciarModulo()">⟲ Reiniciar módulo</button>';
+  if(opts.mapa) h += '<button class="navbtn" onclick="mapaGeral()">🗺️ Mapa Geral</button>';
+  h += '<button class="navbtn" onclick="reiniciarJogo()">🔄 Reiniciar jogo</button>';
+  h += '<button class="navbtn" onclick="trocarJogador()">👤 Trocar jogador</button>';
+  return h + '</div>';
+}
+
+/* ================= RESGATE DO VÍNCULO (confiança = 0) ================= */
+var RESCUE = [
+ {ctx:'<span class="who">O vínculo se rompeu.</span> O paciente cruza os braços: "O senhor não está me ouvindo. Vou embora, isso aqui não adianta."',
+  q:'Como resgatar a relação? (Práticas essenciais)',
+  opts:[
+   {t:'Reconhecer o incômodo, pedir desculpas pela falha de comunicação e recomeçar escutando sem interromper, com linguagem simples.', ok:true,
+    fb:'PCE: escuta ativa, respeito e neutralidade reconstroem o vínculo. A confiança mútua é crucial para a adesão e os resultados em longo prazo.'},
+   {t:'Explicar que a conduta é tecnicamente correta e que ele precisa colaborar com o tratamento.', ok:false,
+    fb:'Estar "tecnicamente certo" não recupera vínculo: sem confiança não há adesão. Primeiro acolher, depois retomar o plano.'},
+   {t:'Deixá-lo ir e registrar "paciente não colaborativo" no prontuário.', ok:false,
+    fb:'Rotular a pessoa transfere a ela a falha da comunicação. O manual pede plano de ação para reengajar quem abandona o cuidado.'}
+  ]},
+ {ctx:'<span class="who">O vínculo se rompeu.</span> A paciente responde apenas com monossílabos e evita o olhar depois das últimas condutas.',
+  q:'Qual atitude pode reabrir a comunicação?',
+  opts:[
+   {t:'Nomear o clima com gentileza ("percebo que a deixei desconfortável"), reafirmar o sigilo e devolver o controle: perguntar o que é mais importante para ela agora.', ok:true,
+    fb:'PCE: ambiente de comunicação aberta, sigilo explícito e respeito à vontade e às prioridades da pessoa.'},
+   {t:'Preencher o silêncio apresentando rapidamente o plano de tratamento completo.', ok:false,
+    fb:'Acelerar informação sobre um vínculo rompido aumenta a distância. Primeiro restabelecer a segurança relacional.'},
+   {t:'Chamar o acompanhante para responder por ela.', ok:false,
+    fb:'Substituir a voz da pessoa pela do acompanhante viola a participação dela no próprio cuidado (PCE).'}
+  ]}
+];
+function rescueRound(next){
+  MODE = 'rescue';
+  var c = RESCUE[Math.floor(Math.random()*RESCUE.length)];
+  var ordem = shuffle(c.opts.map(function(o,idx){return idx;}));
+  remember(function(){ rescueRound(next); });
+  screen.innerHTML =
+   '<div class="card">'+
+     navBar({mapa:true})+
+     '<span class="phase-badge rescue">⚠ Resgate do vínculo</span>'+
+     '<p class="muted">A confiança chegou a zero: o paciente está prestes a abandonar o cuidado. Use as habilidades do PCE para recuperá-la.</p>'+
+     '<div class="scenario">'+c.ctx+'</div>'+
+     '<h3>'+c.q+'</h3>'+
+     '<div class="opts" id="opts">'+
+       ordem.map(function(idx){return '<button class="opt" data-i="'+idx+'">'+esc(c.opts[idx].t)+'</button>';}).join('')+
+     '</div><div id="fb"></div>'+
+   '</div>';
+  var btns = document.querySelectorAll('#opts .opt');
+  for(var b=0;b<btns.length;b++){
+    (function(btn){
+      btn.onclick = function(){
+        var o=c.opts[+btn.dataset.i];
+        for(var k=0;k<btns.length;k++){
+          btns[k].disabled=true;
+          if(c.opts[+btns[k].dataset.i].ok) btns[k].classList.add('correct');
+        }
+        if(o.ok){ sndOk(); setTrust(+30); fbBox(true, o.fb+' O paciente decide ficar. (Confiança restaurada para '+S.trust+')'); }
+        else { sndErr(); btn.classList.add('wrong','shake'); setTrust(+15);
+          fbBox(false, o.fb+' Um colega intervém e evita o abandono, mas o vínculo segue frágil. (Confiança: '+S.trust+')');
+          logErr('PCE — Resgate do vínculo', c.q, 'Confiança zerada exige as habilidades de comunicação do PCE: escuta, sigilo, respeito e devolução de controle à pessoa.');
+        }
+        document.getElementById('fb').insertAdjacentHTML('beforeend',
+          '<button class="btn" onclick="__next()">Continuar ➜</button>');
+        window.__next = function(){ MODE='normal'; next(); };
+      };
+    })(btns[b]);
+  }
+}
+function checkRescue(next){
+  if(S.trust===0 && MODE==='normal'){ rescueRound(next); return true; }
+  return false;
+}
+
+/* ================= CONTEÚDO (fiel ao MI-mhGAP 2.0) ================= */
+/* Distratores redesenhados: erros plausíveis que profissionais reais cometem. */
+
+var MODS = [
+/* ---------- 0. PCE ---------- */
+{ code:'PCE', emoji:'🤝', nome:'Práticas e cuidados essenciais',
+  desc:'Comunicação, dignidade e o fluxo básico de avaliação e manejo.',
+  badge:{emoji:'🤝', name:'Cuidado Essencial'},
+  intro:'A base de tudo: como acolher, avaliar e manejar qualquer condição MNS com respeito e dignidade.',
+  acts:[
+  {type:'cenario', data:[
+   {ctx:'<span class="who">UBS, 8h.</span> Dona Marta, 46 anos, chega tensa: "não ando bem da cabeça". A recepção está cheia e a acompanhante quer entrar junto.',
+    q:'Como iniciar o atendimento?',
+    opts:[
+     {t:'Fazer uma triagem rápida ali mesmo e, se parecer grave, agendar um horário reservado para outro dia.', ok:false,
+      fb:'Parece eficiente, mas expõe a queixa em público e adia o acolhimento. O manual pede local reservado JÁ na primeira escuta — a triagem de saúde mental é a própria conversa sigilosa.'},
+     {t:'Levá-la a uma sala reservada, apresentar-se, garantir o sigilo e sugerir conversa a sós, pedindo consentimento para envolver a acompanhante.', ok:true,
+      fb:'Dicas de comunicação do PCE: local reservado, apresentação acolhedora, sigilo explícito e cuidador envolvido só com consentimento da pessoa.'},
+     {t:'Atender as duas juntas desde o início: a acompanhante conhece bem o caso e agiliza a anamnese.', ok:false,
+      fb:'Erro comum e bem-intencionado. O PCE manda sugerir a conversa em particular e pedir consentimento para compartilhar informações — a acompanhante entra depois, se a pessoa autorizar.'}
+    ],
+    licao:'PCE: local reservado, sigilo, escuta ativa e consentimento para envolver cuidadores.'},
+   {ctx:'Ao explicar o plano, você percebe que Dona Marta não entendeu os termos técnicos e ficou constrangida.',
+    q:'O que fazer?',
+    opts:[
+     {t:'Reexplicar com linguagem simples, resumir os pontos essenciais e abrir espaço para perguntas dela.', ok:true,
+      fb:'"SIM" do PCE: informação acessível, riscos e benefícios explicados (por escrito se possível) e consentimento para o tratamento. "NÃO": linguagem excessivamente técnica.'},
+     {t:'Entregar o termo de consentimento para ela assinar e orientar que leia com calma em casa.', ok:false,
+      fb:'Assinatura sem compreensão não é consentimento esclarecido. A explicação acessível precisa acontecer na consulta, com espaço para perguntas.'},
+     {t:'Pedir que a acompanhante traduza depois, já que tem mais estudo.', ok:false,
+      fb:'Delegar a explicação quebra o direito da pessoa à informação direta e ao sigilo. Quem explica, com linguagem simples, é o profissional.'}
+    ],
+    licao:'PCE — dignidade: linguagem simples, consentimento esclarecido, autonomia; nunca decidir pela pessoa.'},
+   {ctx:'Dona Marta começa a contar a história: fala devagar, se emociona e mistura as datas dos acontecimentos.',
+    q:'Qual é a melhor conduta de escuta?',
+    opts:[
+     {t:'Escutar sem interromper, demonstrar compreensão e depois pedir esclarecimentos com calma sobre os pontos confusos.', ok:true,
+      fb:'3ª dica de comunicação: comece escutando — escuta ativa, sensível, sem interrupções, com paciência para esclarecer o que não ficou claro.'},
+     {t:'Redirecionar com perguntas fechadas de sim/não, que organizam o relato e economizam o tempo da consulta.', ok:false,
+      fb:'Parece eficiente, mas perguntas fechadas precoces cortam informação clínica valiosa. Primeiro a escuta aberta; as perguntas dirigidas vêm depois.'},
+     {t:'Pedir que ela anote a história em casa e retorne com o relato organizado por escrito.', ok:false,
+      fb:'Adiar o acolhimento afasta a pessoa do cuidado. A escuta paciente É parte da avaliação, não perda de tempo.'}
+    ],
+    licao:'3ª dica: comece escutando — sem interromper, com paciência para esclarecer.'},
+   {ctx:'No meio da consulta, a paciente revela, com a voz embargada, que sofreu violência do ex-companheiro e nunca contou a ninguém.',
+    q:'Como responder?',
+    opts:[
+     {t:'Reconhecer que foi difícil contar, reafirmar o sigilo e responder com sensibilidade, sem pressionar por detalhes.', ok:true,
+      fb:'6ª dica: diante de experiências difíceis (violência, agressão sexual, autoagressão), demonstre maior sensibilidade, garanta o sigilo e reconheça a coragem de revelar.'},
+     {t:'Colher imediatamente todos os detalhes do ocorrido, para documentar bem o caso no prontuário.', ok:false,
+      fb:'A documentação importa, mas o interrogatório detalhado no momento da revelação retraumatiza. Primeiro acolher; os detalhes virão no ritmo dela.'},
+     {t:'Mudar suavemente de assunto para não reativar o sofrimento e manter o foco na queixa principal.', ok:false,
+      fb:'Evitar o tema transmite que o assunto é proibido. O manual pede resposta sensível — nem pressionar, nem silenciar.'}
+    ],
+    licao:'6ª dica: sensibilidade nas revelações difíceis — sigilo, acolhimento, sem pressionar.'},
+   {ctx:'Você (profissional homem) vai entrevistar uma jovem que chegou desacompanhada, com queixas emocionais.',
+    q:'Que cuidado a 1ª dica de comunicação sugere?',
+    opts:[
+     {t:'Considerar fazer a entrevista na presença de outra mulher da equipe, mantendo o sigilo e o acolhimento.', ok:true,
+      fb:'O PCE orienta: ao entrevistar uma mulher jovem, considere a presença de outra mulher da equipe ou do cuidador — segurança para a paciente e para o profissional.'},
+     {t:'Entrevistar sempre a sós, pois qualquer terceiro na sala violaria o sigilo da consulta.', ok:false,
+      fb:'O sigilo não impede a presença de uma profissional da equipe — que também é guardiã do sigilo. A recomendação existe para dar segurança à jovem.'},
+     {t:'Adiar o atendimento até que um responsável possa acompanhá-la.', ok:false,
+      fb:'Adolescentes e jovens que chegam sozinhos devem ser atendidos, com o próprio consentimento (populações especiais do PCE).'}
+    ],
+    licao:'Ao entrevistar mulher jovem, considerar a presença de outra mulher da equipe.'},
+   {ctx:'<span class="who">Seu João, 58 anos</span>, tem transtorno mental grave. Fuma 20 cigarros por dia, é sedentário e está com a pressão em 160×100 — mas veio "só renovar a receita".',
+    q:'O que o PCE orienta?',
+    opts:[
+     {t:'Aproveitar a consulta para a avaliação física integral: pessoas com transtornos mentais graves têm risco 2 a 3 vezes maior de morrer de doenças evitáveis.', ok:true,
+      fb:'Dica Clínica do PCE: reduzir esse risco com educação e monitoramento. Anamnese com fatores de risco, exame físico, comorbidades e orientação de estilo de vida.'},
+     {t:'Renovar a receita e encaminhar a parte física ao clínico geral em outra agenda, para não misturar os cuidados.', ok:false,
+      fb:'Fragmentar o cuidado é o erro que mata essa população: a avaliação física é parte da avaliação integral em saúde mental, na mesma consulta.'},
+     {t:'Tratar primeiro a pressão e suspender o psicotrópico até o quadro cardiovascular estabilizar.', ok:false,
+      fb:'As condições são manejadas simultaneamente — suspender o tratamento mental sem indicação arrisca recaída.'}
+    ],
+    licao:'Risco 2–3× maior de morte por doenças evitáveis: avaliação física integral sempre.'},
+   {ctx:'Durante o exame do estado mental, o paciente relata ouvir uma voz comentando seus atos quando está sozinho.',
+    q:'Esse achado pertence a qual domínio do EEM?',
+    opts:[
+     {t:'Perturbação da percepção — percepção sensitiva que ocorre sem estímulo externo (alucinação auditiva).', ok:true,
+      fb:'Definição do EEM adaptado do PCE. Os demais domínios: aparência e comportamento, humor e afeto, conteúdo do pensamento e cognição.'},
+     {t:'Conteúdo do pensamento — a voz é um pensamento intrusivo sobre si mesmo.', ok:false,
+      fb:'Conteúdo do pensamento abrange delírios, paranoia e ideação; OUVIR uma voz sem estímulo é fenômeno perceptivo: alucinação.'},
+     {t:'Cognição — indica falha de atenção e memória ao interpretar sons do ambiente.', ok:false,
+      fb:'Cognição refere-se a atenção, memória, juízo e raciocínio. Percepção sem estímulo externo é alucinação.'}
+    ],
+    licao:'EEM: alucinações pertencem ao domínio da percepção.'},
+   {ctx:'O paciente iniciou tratamento há 2 semanas e os sintomas começam a responder.',
+    q:'Como organizar o seguimento, segundo o PCE?',
+    opts:[
+     {t:'Consultas iniciais mais frequentes até a resposta se firmar; depois, menos frequentes porém regulares — com plano de ação caso ele falte.', ok:true,
+      fb:'Regra de seguimento do PCE: avaliar resposta, efeitos colaterais e adesão em cada retorno, e recorrer à família e à comunidade para reengajar quem some.'},
+     {t:'Como já há resposta, espaçar de imediato para retornos semestrais.', ok:false,
+      fb:'Cedo demais: no início a frequência é maior; o espaçamento vem com a melhora sustentada.'},
+     {t:'Deixar o retorno em aberto: ele volta quando sentir necessidade.', ok:false,
+      fb:'Consulta de seguimento se marca com dia e horário combinados — e há plano de ação para faltas. "Retorno livre" é onde os casos se perdem.'}
+    ],
+    licao:'Seguimento: frequente no início, regular depois, com plano para faltas.'},
+   {ctx:'Ao fim da avaliação, você percebe: o paciente perdeu o emprego, está com o aluguel atrasado e parou os estudos.',
+    q:'Isso é assunto para o serviço de saúde?',
+    opts:[
+     {t:'Sim: o PCE manda conectar a pessoa a setores de emprego, educação e serviços sociais (inclusive moradia) para assegurar a atenção integral.', ok:true,
+      fb:'Etapa do manejo PCE: vínculos fortes com outros setores. Estressores sociais alimentam a condição MNS — tratar só o sintoma é enxugar gelo.'},
+     {t:'Não diretamente: registrar no prontuário e focar no que é clínico; o resto é com a assistência social, se ele procurar.', ok:false,
+      fb:'Registrar e esperar não é conectar. O profissional de saúde promove ativamente o vínculo com os outros setores.'},
+     {t:'Abordar via medicação: com os sintomas controlados, ele resolverá as questões sociais sozinho.', ok:false,
+      fb:'É o inverso: sem abordar os estressores psicossociais, a resposta ao tratamento fica comprometida (redução do estresse é intervenção do PCE).'}
+    ],
+    licao:'Manejo inclui vínculos com emprego, educação e serviços sociais — atenção integral.'},
+   {ctx:'Ao montar planos de tratamento, sua equipe revisa a tabela de tratamentos psicológicos do PCE.',
+    q:'Qual pareamento intervenção → condição está correto?',
+    opts:[
+     {t:'TCC → depressão, crianças/adolescentes, substâncias e psicoses; TIP e ativação comportamental → depressão; manejo de contingências e reforço motivacional → substâncias; habilidades parentais → crianças/adolescentes.', ok:true,
+      fb:'É a tabela do PCE: a TCC é a mais transversal (DEP, MCO, SUB, PSI); TIP, ativação, relaxamento e solução de problemas são para DEP; contingências e reforço motivacional para SUB; habilidades parentais para MCO; terapia familiar para PSI e SUB.'},
+     {t:'TIP → psicoses; habilidades parentais → depressão; TCC → apenas depressão.', ok:false,
+      fb:'Pareamentos trocados: a TIP é para depressão; habilidades parentais para crianças e adolescentes (MCO); e a TCC serve a DEP, MCO, SUB e PSI.'},
+     {t:'Tratamentos psicológicos exigem psiquiatra, então a tabela não se aplica à atenção primária.', ok:false,
+      fb:'O manual afirma o contrário: podem ser oferecidos efetivamente por trabalhadores não especializados capacitados e supervisionados, e também por autoajuda guiada.'}
+    ],
+    licao:'Tabela PCE: TCC→DEP/MCO/SUB/PSI; TIP, ativação, solução de problemas e relaxamento→DEP; contingências e reforço motivacional→SUB; habilidades parentais→MCO; terapia familiar→PSI/SUB.'}
+  ]},
+  {type:'ordena', data:{
+    intro:'Monte o <b>fluxo da avaliação MNS</b> do PCE tocando as etapas na ordem correta.',
+    itens:[
+     'Queixa inicial (quando, por que e como começou)',
+     'Anamnese (história MNS pregressa, clínica geral, familiar e psicossocial)',
+     'Exame físico direcionado',
+     'Exame do estado mental (EEM)',
+     'Diagnóstico diferencial + exames laboratoriais básicos',
+     'Identificar a condição MNS e seguir o módulo apropriado'
+    ],
+    licao:'Fluxo PCE: queixa → anamnese → exame físico → EEM → diferencial/exames → identificar condição.'}},
+  {type:'cenario', data:[
+   {ctx:'Condição identificada. Hora de montar o <b>plano escrito de tratamento</b>.',
+    q:'O que ele deve conter, segundo a Dica Clínica do PCE?',
+    opts:[
+     {t:'Intervenções farmacológicas (se houver), psicossociais, referências, plano de seguimento e manejo de condições concomitantes.', ok:true,
+      fb:'Os 5 componentes do plano escrito — sempre elaborado em conjunto com a pessoa, respeitando vontade e preferências.'},
+     {t:'Prescrição + retorno agendado; as intervenções psicossociais entram depois, se o medicamento falhar.', ok:false,
+      fb:'As intervenções psicossociais devem ser SEMPRE oferecidas desde o início, não como plano B do fármaco.'},
+     {t:'Prescrição + psicossociais; referências e seguimento ficam a cargo da regulação.', ok:false,
+      fb:'Referências e plano de seguimento integram o plano escrito — é o profissional que assegura sua implantação, com dia e horário combinados.'}
+    ],
+    licao:'Plano escrito: farmacológicas (se houver) + psicossociais + referências + seguimento + comorbidades.'}
+  ]}
+]},
+
+/* ---------- 1. DEP ---------- */
+{ code:'DEP', emoji:'🌧️', nome:'Depressão',
+  desc:'Critérios, bipolaridade, luto, antidepressivos e seguimento.',
+  badge:{emoji:'🌤️', name:'Luz na Tristeza'},
+  intro:'Ana, 24 anos, procura a unidade com "uma tristeza que não passa". Primeiro, conduza a anamnese — depois, decida.',
+  acts:[
+  {type:'anamnese', data:{
+    intro:'<span class="who">Ana, 24 anos:</span> "Ando triste, sem vontade de nada. Nem desenhar eu quero mais."',
+    max:4,
+    itens:[
+     {t:'Perguntar há quanto tempo se sente assim e como estão sono, apetite, energia e o trabalho.', ok:true,
+      resp:'"Umas 3 semanas. Durmo mal, quase não como, me sinto culpada por tudo e no trabalho não rendo nada."',
+      note:'Critérios de duração, sintomas associados e prejuízo funcional — o coração do DEP 1.'},
+     {t:'Perguntar se já teve alguma fase de energia exagerada, com pouco sono, fala acelerada e gastos impulsivos.', ok:true,
+      resp:'"Teve uma semana, há 2 anos, que eu me sentia elétrica: mal dormia e gastei o salário inteiro em compras."',
+      note:'Rastrear mania é obrigatório: muda todo o tratamento (transtorno bipolar).'},
+     {t:'Perguntar sobre saúde física, medicamentos em uso, álcool e outras substâncias.', ok:true,
+      resp:'"Saúde boa, não tomo nada, não bebo."',
+      note:'Descartar causa física (anemia, hipotireoidismo, substâncias) antes de rotular como depressão.'},
+     {t:'Perguntar se houve alguma grande perda nos últimos 6 meses (luto, separação).', ok:true,
+      resp:'"Não, nada disso."',
+      note:'Grande perda recente muda a conduta: reação normal de luto não recebe manejo de depressão.'},
+     {t:'Tranquilizar logo no início: "isso é uma fase, passa sozinho" — e encurtar a consulta para não reforçar a queixa.', ok:false,
+      resp:'Ana se cala e passa a responder por monossílabos.',
+      note:'Minimizar o sofrimento fecha a porta da anamnese e viola a escuta ativa do PCE.'},
+     {t:'Solicitar de imediato bateria ampla de exames e ressonância, antes de qualquer outra pergunta.', ok:false,
+      resp:'Ana fica assustada: "É grave assim, doutor?"',
+      note:'Exames básicos entram quando indicados — a anamnese vem primeiro e orienta o que pedir.'}
+    ],
+    licao:'Anamnese da depressão: duração e sintomas, rastrear mania, causa física/substâncias e perda recente.'}},
+  {type:'cenario', data:[
+   {ctx:'Com a anamnese completa, você organiza o raciocínio sobre <b>Ana</b>.',
+    q:'O que sustenta a suspeita de depressão no algoritmo DEP?',
+    opts:[
+     {t:'Pelo menos 1 sintoma básico (humor deprimido ou perda de interesse) por ≥ 2 semanas + vários outros sintomas + dificuldade considerável no funcionamento diário.', ok:true,
+      fb:'São os 3 filtros sequenciais do DEP 1. Ana passa por todos: sintomas básicos, sintomas adicionais (sono, culpa) e prejuízo funcional.'},
+     {t:'O humor deprimido persistente por si só: os demais sintomas e o prejuízo funcional são complementares, não obrigatórios.', ok:false,
+      fb:'Erro de critério comum: o algoritmo exige as TRÊS camadas (sintoma básico ≥ 2 semanas E vários outros sintomas E prejuízo funcional). Sem elas, vá para OUT.'},
+     {t:'Insônia + culpa por 3 semanas já configuram depressão grave, com indicação imediata de antidepressivo.', ok:false,
+      fb:'Sintomas isolados não fecham critério nem definem gravidade — e o fármaco não é o primeiro passo: antes vêm o descarte de outras causas e as intervenções psicossociais.'}
+    ],
+    licao:'DEP: 1 sintoma básico ≥ 2 semanas + vários outros sintomas + prejuízo funcional.'},
+   {ctx:'A anamnese revelou a "semana elétrica" de 2 anos atrás: pouco sono, fala acelerada, gastos impulsivos.',
+    q:'Isso muda o quê?',
+    opts:[
+     {t:'Sugere episódio depressivo no TRANSTORNO BIPOLAR: nunca prescrever antidepressivo sozinho, sem estabilizador do humor; consultar especialista.', ok:true,
+      fb:'História de mania → Protocolo 2. Antidepressivo isolado pode desencadear mania. Use estabilizador (lítio, carbamazepina ou valproato) e consulte especialista.'},
+     {t:'Tratar a depressão atual com fluoxetina e investigar o episódio antigo depois — o problema de agora é depressivo.', ok:false,
+      fb:'Armadilha clássica: o episódio antigo é justamente o que muda o tratamento de agora. Antidepressivo sem estabilizador pode desencadear mania.'},
+     {t:'Prescrever o antidepressivo junto com um benzodiazepínico, que protege contra a virada maníaca.', ok:false,
+      fb:'Benzodiazepínico não é estabilizador do humor e não previne mania — só os estabilizadores (lítio, carbamazepina, valproato) cumprem esse papel.'}
+    ],
+    licao:'História de mania = bipolar: antidepressivo só com estabilizador do humor; consultar especialista.'},
+   {ctx:'Caso paralelo: <b>Seu Antônio, 67 anos, cardiopata</b>, com depressão confirmada, tem indicação de antidepressivo.',
+    q:'Qual escolha segue a Tabela 1 do módulo?',
+    opts:[
+     {t:'Fluoxetina em dose baixa (opção preferida em idosos); amitriptilina é contraindicada na doença cardiovascular.', ok:true,
+      fb:'A tabela indica: ISRS preferido em idosos/doença médica; NÃO prescrever amitriptilina a cardiopatas (risco de arritmia e overdose letal).'},
+     {t:'Amitriptilina em dose reduzida (25 mg à noite), aproveitando a sedação para tratar também a insônia.', ok:false,
+      fb:'Raciocínio tentador, mas a contraindicação em cardiopatas vale mesmo em dose baixa: alterações de ECG e arritmias. Fluoxetina é a opção preferida.'},
+     {t:'Fluoxetina na dose plena de adulto jovem, para não subtratar a depressão.', ok:false,
+      fb:'Em idosos, começa-se com 10 mg/dia e o máximo é menor (40 mg). Dose plena de jovem aumenta efeitos colaterais e risco de hiponatremia.'}
+    ],
+    licao:'Idosos: ISRS em dose baixa; amitriptilina contraindicada em cardiopatas; nunca combinar antidepressivos.'},
+   {ctx:'Ana (reavaliada, sem bipolar) usou fluoxetina e melhorou muito em 2 meses. Ela quer parar o remédio: "já estou bem".',
+    q:'O que orientar?',
+    opts:[
+     {t:'Manter o tratamento até ficar assintomática por 9 a 12 meses; depois, retirar gradualmente em no mínimo 4 semanas, monitorando recaída.', ok:true,
+      fb:'Seguimento DEP 3: nunca interromper só porque houve melhora; a retirada é gradual e monitorada.'},
+     {t:'Negociar a redução da dose pela metade agora e suspender no próximo mês, já que ela respondeu bem.', ok:false,
+      fb:'Parece prudente, mas ainda é cedo demais: a remissão precisa se sustentar por 9–12 meses antes de iniciar a retirada gradual.'},
+     {t:'Explicar que quem respondeu a antidepressivo deve mantê-lo indefinidamente para não recair.', ok:false,
+      fb:'O tratamento tem horizonte definido (9–12 meses após remissão) e retirada planejada — uso indefinido não é a regra do manual.'}
+    ],
+    licao:'Manter antidepressivo 9–12 meses após remissão; retirada gradual em ≥ 4 semanas.'},
+   {ctx:'<span class="who">Dona Cleusa, 58 anos</span>: perdeu o marido há 3 meses. Tristeza, choro e insônia — mas sem ideação suicida, sem sintomas psicóticos, sem lentidão psicomotora e sem história prévia de depressão.',
+    q:'O algoritmo DEP indica…',
+    opts:[
+     {t:'Não instituir manejo de depressão: perda importante nos últimos 6 meses sem sinais graves sugere luto — apoiar (vá para OUT) e reavaliar.', ok:true,
+      fb:'DEP 1: no luto recente, só se trata como depressão se houver ideação suicida, sintomas psicóticos, lentidão psicomotora ou história prévia de depressão.'},
+     {t:'Iniciar ISRS: os sintomas já duram mais de 2 semanas e preenchem os critérios do módulo.', ok:false,
+      fb:'A armadilha do critério cego: a grande perda recente é um dos descartes obrigatórios ANTES do diagnóstico. Luto normal não se medica.'},
+     {t:'Prescrever benzodiazepínico para a insônia enquanto o luto se resolve.', ok:false,
+      fb:'Medicalizar o luto por outra porta: benzodiazepínico cria dependência e não trata nada. O caminho é apoio e rituais (OUT).'}
+    ],
+    licao:'Luto recente sem sinais graves: não instituir manejo de depressão — apoiar e reavaliar.'},
+   {ctx:'Na psicoeducação de Ana, a família pergunta o que dizer a ela em casa.',
+    q:'Qual mensagem está alinhada ao módulo?',
+    opts:[
+     {t:'"A depressão é uma condição comum e tratável, não é fraqueza — e os pensamentos muito negativos tendem a melhorar com o tratamento."', ok:true,
+      fb:'Mensagens essenciais do DEP 2.1: é comum, não é preguiça nem fraqueza, e as visões negativas fazem parte da doença e melhoram com o tratamento.'},
+     {t:'"Você precisa reagir e ser mais forte — todo mundo tem problemas e segue em frente."', ok:false,
+      fb:'É exatamente a atitude que o manual desmonta: cobrar força de vontade nasce da invisibilidade da depressão e agrava a culpa.'},
+     {t:'"É um desequilíbrio químico: só o medicamento resolve, o resto é secundário."', ok:false,
+      fb:'Reducionismo: as intervenções psicossociais são parte central do tratamento — retomar atividades, sono regular, rede social.'}
+    ],
+    licao:'Psicoeducação DEP: comum, tratável, não é fraqueza; pensamentos negativos melhoram com o tratamento.'},
+   {ctx:'Um paciente com depressão pede "aquelas injeções de vitaminas que levantam o ânimo", que costumava tomar em outra clínica.',
+    q:'O que fazer?',
+    opts:[
+     {t:'Explicar com respeito que injeções de vitamina não tratam depressão (o manual as veta como tratamento inefetivo) e oferecer o que funciona: intervenções psicossociais e, se indicado, antidepressivo.', ok:true,
+      fb:'DEP: NÃO use tratamentos inefetivos, p. ex., injeções de vitamina, para controle dos sintomas.'},
+     {t:'Aplicar a injeção: é inócua, atende a expectativa e fortalece o vínculo terapêutico.', ok:false,
+      fb:'O placebo bem-intencionado adia o tratamento real e reforça a crença errada sobre a doença. Vínculo se constrói com honestidade e resultado.'},
+     {t:'Prescrever polivitamínico oral como transição enquanto o antidepressivo faz efeito.', ok:false,
+      fb:'Mesma lógica com outra embalagem: sem papel terapêutico na depressão, confunde a psicoeducação.'}
+    ],
+    licao:'Injeções de vitamina e afins são tratamentos inefetivos — vetados no módulo DEP.'},
+   {ctx:'<span class="who">Fernanda, 30 anos</span>, grávida de 10 semanas, com depressão moderada confirmada.',
+    q:'Como tratar, segundo as populações especiais do DEP?',
+    opts:[
+     {t:'Priorizar intervenções psicossociais e evitar antidepressivos se possível (sobretudo no 1º trimestre); sem resposta, considerar a menor dose efetiva e consultar especialista.', ok:true,
+      fb:'E na lactação, evitar os de ação prolongada como a fluoxetina. A articulação com a saúde materna completa o cuidado.'},
+     {t:'Iniciar fluoxetina de imediato: é o antidepressivo mais estudado e considerado seguro na gestação.', ok:false,
+      fb:'O módulo pede o caminho inverso: psicossocial primeiro; fármaco só sem resposta — e na menor dose efetiva.'},
+     {t:'Suspender qualquer abordagem até o fim da amamentação, para proteger o bebê.', ok:false,
+      fb:'Depressão não tratada na gestação também faz mal a mãe e bebê. As intervenções psicossociais são seguras e começam já.'}
+    ],
+    licao:'Gestante com depressão: psicossocial primeiro; antidepressivo só sem resposta, na menor dose, com especialista.'},
+   {ctx:'Você iniciou hoje o tratamento de um paciente com depressão.',
+    q:'Quando deve ser o próximo contato, pelo seguimento do DEP?',
+    opts:[
+     {t:'Segunda consulta dentro de 1 semana; no início, contato mais frequente (p. ex., mensal nos 3 primeiros meses), espaçando com a melhora.', ok:true,
+      fb:'Recomendações de frequência do DEP 3 — e o seguimento continua até a pessoa ficar sem sintomas de depressão.'},
+     {t:'Retorno em 6 semanas, o tempo necessário para avaliar a resposta ao antidepressivo.', ok:false,
+      fb:'A resposta plena demora, mas o CONTATO não pode esperar: adesão, efeitos colaterais e risco de suicídio se monitoram desde a 1ª semana.'},
+     {t:'Combinar que ele retorne se os sintomas piorarem.', ok:false,
+      fb:'Na depressão, esperar a piora é esperar o abandono: a apatia da própria doença impede a busca por ajuda.'}
+    ],
+    licao:'DEP: 2ª consulta em 1 semana; contato frequente nos primeiros 3 meses.'},
+   {ctx:'Ana pergunta o que pode fazer no dia a dia, além do tratamento na unidade.',
+    q:'Qual orientação segue o módulo?',
+    opts:[
+     {t:'Tentar retomar atividades que antes davam prazer, manter horários regulares de sono, manter-se fisicamente ativa, comer regularmente e passar tempo com pessoas de confiança.', ok:true,
+      fb:'DEP 2.3 — promoção do funcionamento: mesmo sendo difíceis, essas medidas ajudam a melhorar o humor. Explique isso à pessoa e ao cuidador.'},
+     {t:'Repousar ao máximo e se afastar dos compromissos até a medicação normalizar o humor.', ok:false,
+      fb:'O repouso prolongado alimenta o ciclo da depressão (isolamento gera piora). A ativação comportamental faz o caminho contrário.'},
+     {t:'Evitar encontros sociais por ora, para não se expor a perguntas sobre a doença.', ok:false,
+      fb:'Reativar a rede social é intervenção do módulo — o isolamento protege do constrangimento e entrega a piora.'}
+    ],
+    licao:'Ativação: retomar atividades prazerosas, sono regular, atividade física e vida social.'},
+   {ctx:'Paciente com depressão grave passa a ouvir vozes acusatórias e a acreditar que está "apodrecendo por dentro".',
+    q:'O que muda no manejo?',
+    opts:[
+     {t:'Depressão com sintomas psicóticos: é preciso adaptar o tratamento da depressão e CONSULTAR UM ESPECIALISTA.', ok:true,
+      fb:'Dica Clínica do DEP 1: pessoas com depressão podem ter delírios ou alucinações; nesse caso, adapta-se o tratamento e consulta-se o especialista.'},
+     {t:'Nada: alucinações são esperadas na depressão grave e cedem com o antidepressivo em dose plena.', ok:false,
+      fb:'Sintomas psicóticos mudam o plano — o antidepressivo isolado não basta, e o caso exige apoio especializado.'},
+     {t:'Reclassificar como esquizofrenia e tratar apenas com antipsicótico.', ok:false,
+      fb:'O quadro afetivo dominante indica depressão com sintomas psicóticos, não esquizofrenia — a adaptação do tratamento é feita com o especialista.'}
+    ],
+    licao:'Depressão com delírios ou alucinações: adaptar o tratamento e consultar especialista.'},
+   {ctx:'Paciente em uso de varfarina (anticoagulante) tem indicação de antidepressivo; outra paciente da fila usa tamoxifeno.',
+    q:'O que a Tabela 1 do DEP alerta sobre a fluoxetina?',
+    opts:[
+     {t:'Evitar a combinação com varfarina (risco de sangramento) e ter cuidado com tamoxifeno, codeína e tramadol (reduz o efeito deles); ela também eleva os níveis de tricíclicos e antipsicóticos.', ok:true,
+      fb:'Interações da fluoxetina na Tabela 1 — e AAS/anti-inflamatórios aumentam o risco de anormalidades hemorrágicas com ISRS.'},
+     {t:'A fluoxetina não tem interações relevantes; por isso é a primeira escolha universal.', ok:false,
+      fb:'Tem várias e importantes: varfarina, tamoxifeno, codeína, tramadol, tricíclicos, antipsicóticos e betabloqueadores.'},
+     {t:'Trocar por amitriptilina nesses casos, que é livre de interações.', ok:false,
+      fb:'A amitriptilina tem interações próprias (antimaláricos como a quinina elevam seus níveis) e contraindicações graves — não é rota de fuga.'}
+    ],
+    licao:'Fluoxetina: evitar com varfarina; cuidado com tamoxifeno, codeína e tramadol; eleva ATCs e antipsicóticos.'}
+  ]}
+]},
+
+/* ---------- 2. PSI ---------- */
+{ code:'PSI', emoji:'🌀', nome:'Psicoses',
+  desc:'Psicose, mania, delirium e o uso correto de antipsicóticos.',
+  badge:{emoji:'🧿', name:'Mente Clara'},
+  intro:'Comportamentos muito alterados chegam à unidade. Diferencie delirium, mania e psicose — e maneje sem violar direitos.',
+  acts:[
+  {type:'cenario', data:[
+   {ctx:'<span class="who">Carlos, 30 anos</span>, trazido pela família: confuso desde ontem, fala coisas sem sentido, <b>febre alta</b>, piora à noite e o nível de consciência oscila.',
+    q:'Primeira hipótese do algoritmo PSI?',
+    opts:[
+     {t:'Delirium por condição física aguda (infecção, anormalidade metabólica, medicamentos) — avaliar e tratar a causa antes de rotular como psicose.', ok:true,
+      fb:'PSI 1, passo 1: início agudo + febre + consciência flutuante = investigar condição médica. Só se os sintomas persistirem após o manejo da causa é que se avalia psicose.'},
+     {t:'Primeiro episódio psicótico — iniciar haloperidol oral em dose baixa e reavaliar em 4 a 6 semanas.', ok:false,
+      fb:'Seria a conduta certa para psicose confirmada — mas febre + flutuação da consciência apontam delirium: tratar a infecção/causa primeiro, ou o antipsicótico mascara uma emergência.'},
+     {t:'Intoxicação por substância — observar em casa e reavaliar quando o efeito passar.', ok:false,
+      fb:'Hipótese a considerar, mas "observar em casa" é o erro: com febre e confusão flutuante, a avaliação da causa aguda é imediata (infecção, hipoglicemia, desidratação podem matar).'}
+    ],
+    licao:'Sintomas psicóticos agudos com febre/flutuação = investigar delirium e causas médicas primeiro.'},
+   {ctx:'<span class="who">Beatriz, 27 anos</span>, em uso de fluoxetina para depressão, chega com 10 dias de: sono de 3h "sem cansaço", fala acelerada, gastos impulsivos e autoestima inflada — sem conseguir trabalhar.',
+    q:'Conduta do protocolo de episódio maníaco?',
+    opts:[
+     {t:'INTERROMPER o antidepressivo e iniciar lítio, valproato, carbamazepina ou antipsicótico; considerar benzodiazepínico por curto prazo se houver agitação.', ok:true,
+      fb:'Antidepressivo pode alimentar a mania: suspender já. Lítio só como 1ª linha se houver monitoramento clínico-laboratorial; benzodiazepínico no máximo 2–4 semanas.'},
+     {t:'Reduzir a fluoxetina pela metade e associar o estabilizador, retirando o antidepressivo aos poucos.', ok:false,
+      fb:'Parece cauteloso, mas o manual manda INTERROMPER o antidepressivo de imediato no episódio maníaco — mantê-lo, mesmo em dose menor, sustenta o combustível da mania.'},
+     {t:'Iniciar lítio imediatamente na unidade, sem exames, por ser o padrão-ouro do transtorno bipolar.', ok:false,
+      fb:'Lítio exige monitoramento clínico e laboratorial (função renal, tireoide, ECG) e supervisão de especialista; sem essa estrutura, prefira valproato ou carbamazepina.'}
+    ],
+    licao:'Mania: suspender antidepressivo; estabilizador do humor ou antipsicótico; lítio só com monitoramento laboratorial.'},
+   {ctx:'<span class="who">Davi, 22 anos</span>, há meses ouve vozes que comentam seus atos, acredita que vizinhos o vigiam por chips e abandonou o trabalho; discurso desorganizado. Sem febre, sem uso de substâncias.',
+    q:'Confirmada a suspeita de psicose, como iniciar o tratamento farmacológico?',
+    opts:[
+     {t:'Um antipsicótico de cada vez, começando com dose baixa, aumentando devagar, e testando dose efetiva por 4 a 6 semanas antes de julgar inefetivo.', ok:true,
+      fb:'PSI 2.5: prescrição de rotina na psicose, um fármaco por vez, dose mínima, monitorando peso, PA, glicemia e efeitos extrapiramidais.'},
+     {t:'Começar já na dose máxima e reduzir depois que os sintomas cederem — o quadro é grave e arrastado.', ok:false,
+      fb:'"Começar alto" multiplica efeitos extrapiramidais e abandono do tratamento. A regra é dose baixa, aumento lento e paciência de 4–6 semanas.'},
+     {t:'Iniciar antipsicótico de depósito (flufenazina), garantindo adesão desde o primeiro dia.', ok:false,
+      fb:'O depósito não é a porta de entrada: começa-se com antipsicótico oral em dose baixa, ajustável — essencial no início, quando se calibra dose e efeitos.'}
+    ],
+    licao:'Psicose: antipsicótico imediato, um por vez, dose baixa, teste de 4–6 semanas, monitorando efeitos.'},
+   {ctx:'A mãe de Davi pergunta: "Devo mostrar a ele que os chips não existem? Seria melhor um bom período internado?"',
+    q:'O que orientar à família, segundo o módulo?',
+    opts:[
+     {t:'Não tentar convencê-lo de que as crenças são falsas; evitar críticas e hostilidade; dar liberdade de movimento; preferir a vida em família à hospitalização prolongada.', ok:true,
+      fb:'Orientações aos cuidadores do PSI: neutralidade e apoio diante das crenças, sem culpar a pessoa ou a família, evitando restrições e internações prolongadas.'},
+     {t:'Corrigir os delírios com calma e provas concretas, sempre que aparecerem, para não "reforçar a doença".', ok:false,
+      fb:'Erro comum e bem-intencionado: confrontar delírios gera confronto e afasta. O manual pede neutralidade e apoio — nem confirmar, nem combater.'},
+     {t:'Buscar internação prolongada para garantir a adesão à medicação no início do tratamento.', ok:false,
+      fb:'O manual orienta evitar hospitalização prolongada: em geral é melhor viver com a família, em ambiente acolhedor, com seguimento próximo na comunidade.'}
+    ],
+    licao:'Família na psicose: não confrontar delírios, não culpar, evitar restrição e internação prolongada.'},
+   {ctx:'<span class="who">Davi</span>, em haloperidol há 3 semanas, desenvolve tremor, rigidez e uma inquietação incontrolável nas pernas (acatisia).',
+    q:'O que fazer?',
+    opts:[
+     {t:'Reconhecer efeitos extrapiramidais: reduzir a dose do antipsicótico e/ou tratar com anticolinérgico (p. ex., biperideno) quando indicado e disponível.', ok:true,
+      fb:'PSI 2.5 — atenção aos ECE: acatisia, distonia aguda, tremor e rigidez. Manejo com ajuste de dose e anticolinérgicos (Tabela 2 do módulo).'},
+     {t:'Aumentar o haloperidol: a inquietação indica que a psicose ainda não está controlada.', ok:false,
+      fb:'Confundir acatisia com agitação psicótica é erro clássico — e aumentar a dose piora exatamente o que causou o sintoma.'},
+     {t:'Suspender o antipsicótico de imediato e definitivamente.', ok:false,
+      fb:'Suspensão abrupta arrisca recaída psicótica. Primeiro ajustar a dose e tratar o ECE; trocar ou suspender é decisão planejada.'}
+    ],
+    licao:'ECE (tremor, rigidez, acatisia): ajustar dose e/ou anticolinérgico — não aumentar o antipsicótico.'},
+   {ctx:'Plantão: paciente em uso de antipsicótico chega com rigidez muscular intensa, febre alta e pressão elevada.',
+    q:'Qual é a hipótese prioritária?',
+    opts:[
+     {t:'Síndrome neuroléptica maligna — rara e com risco de vida: suspender o antipsicótico e encaminhar ao hospital com urgência.', ok:true,
+      fb:'PSI: a SNM é caracterizada por rigidez muscular, temperatura elevada e hipertensão arterial. É emergência médica.'},
+     {t:'Efeito extrapiramidal comum: prescrever biperideno e reavaliar em uma semana.', ok:false,
+      fb:'A tríade rigidez + febre + alteração autonômica separa a SNM dos ECE comuns — e uma semana de espera pode ser fatal.'},
+     {t:'Quadro infeccioso sem relação com o antipsicótico: tratar a febre e manter a medicação.', ok:false,
+      fb:'Manter o antipsicótico é o pior movimento possível na SNM. Na dúvida, suspender e encaminhar.'}
+    ],
+    licao:'Rigidez + febre alta + PA elevada em uso de antipsicótico = SNM: suspender e hospital.'},
+   {ctx:'Davi estabilizou com risperidona e seguirá em uso prolongado.',
+    q:'O que monitorar no seguimento?',
+    opts:[
+     {t:'Peso, pressão arterial, glicemia de jejum, colesterol e, se possível, ECG — além dos efeitos extrapiramidais.', ok:true,
+      fb:'PSI 2.5: antipsicóticos causam alterações metabólicas e de ECG (prolongamento do intervalo QT). Monitorar é parte da prescrição.'},
+     {t:'Apenas os sintomas psicóticos: o restante é seguimento do clínico geral.', ok:false,
+      fb:'Quem prescreve monitora: as alterações metabólicas dos antipsicóticos são causa importante da mortalidade precoce nessa população.'},
+     {t:'Dosagem sérica mensal do medicamento para guiar os ajustes.', ok:false,
+      fb:'Não há dosagem sérica de rotina para antipsicóticos no MI-mhGAP — o monitoramento é clínico e metabólico.'}
+    ],
+    licao:'Antipsicótico contínuo: monitorar peso, PA, glicemia, colesterol e ECG se possível.'},
+   {ctx:'<span class="who">Beatriz</span> se recuperou do episódio maníaco com valproato. Três meses depois, sente-se "curada" e quer parar.',
+    q:'O que orienta o módulo?',
+    opts:[
+     {t:'Manter o tratamento de manutenção por pelo menos 2 anos após o último episódio bipolar.', ok:true,
+      fb:'PSI: manutenção com lítio ou valproato (ou alternativas supervisionadas) por no mínimo 2 anos — interrupções precoces e irregulares aumentam muito o risco de recaída.'},
+     {t:'Reduzir agora e suspender em 4 semanas, como se faz com antidepressivos após a remissão.', ok:false,
+      fb:'Essa é a regra de OUTRO módulo: no transtorno bipolar o horizonte é de anos — a recaída maníaca é devastadora (gastos, exposição, rupturas).'},
+     {t:'Trocar o valproato por um antidepressivo em dose baixa, para prevenir a fase depressiva.', ok:false,
+      fb:'Antidepressivo sem estabilizador é o gatilho clássico de virada maníaca — jamais como prevenção.'}
+    ],
+    licao:'Bipolar: manutenção por ao menos 2 anos após o último episódio.'},
+   {ctx:'Uma paciente com transtorno bipolar em uso de valproato conta que está grávida de 8 semanas.',
+    q:'Conduta correta?',
+    opts:[
+     {t:'EVITAR valproato, lítio e carbamazepina na gravidez (risco de anomalias congênitas): considerar haloperidol em dose baixa com cuidado e consultar especialista.', ok:true,
+      fb:'Populações especiais do PSI — e articular com a saúde materna. Também não se prescrevem anticolinérgicos de rotina a gestantes.'},
+     {t:'Manter o valproato: a estabilidade do humor materno compensa o risco fetal.', ok:false,
+      fb:'O valproato está entre os piores teratógenos do arsenal (defeitos do tubo neural). A troca supervisionada protege mãe E bebê.'},
+     {t:'Suspender tudo de imediato e retomar apenas após o parto.', ok:false,
+      fb:'Recaída maníaca na gestação é perigosíssima (exposição, agitação, ruptura do pré-natal). Substituir com supervisão, não abandonar.'}
+    ],
+    licao:'Gestação no bipolar: sem valproato, lítio ou carbamazepina; haloperidol em dose baixa com especialista.'},
+   {ctx:'<span class="who">Adolescente de 16 anos</span> com quadro psicótico confirmado precisa de tratamento farmacológico.',
+    q:'Qual é a regra do módulo para essa população?',
+    opts:[
+     {t:'Pode-se oferecer risperidona (ou, se inviável, haloperidol ou clorpromazina) — porém somente sob supervisão de um especialista.', ok:true,
+      fb:'Populações especiais do PSI: em adolescentes, o antipsicótico entra apenas com supervisão especializada; considerar consulta à saúde mental.'},
+     {t:'Prescrever igual ao adulto: a farmacologia é a mesma a partir da puberdade.', ok:false,
+      fb:'Adolescentes são população especial no módulo: a prescrição exige supervisão de especialista.'},
+     {t:'Aguardar a maioridade para iniciar antipsicóticos.', ok:false,
+      fb:'Dois anos de psicose não tratada destruiriam a trajetória escolar e social do jovem — o tratamento não espera; a supervisão o acompanha.'}
+    ],
+    licao:'Psicose no adolescente: risperidona (ou alternativas) só sob supervisão de especialista.'},
+   {ctx:'<span class="who">Sala de espera:</span> paciente psicótico agitado, gritando e ameaçando quebrar objetos. A equipe olha para você.',
+    q:'Primeiro movimento?',
+    opts:[
+     {t:'Manejar a agitação ANTES de prosseguir a avaliação: reduzir estímulos, falar com calma e respeito, garantir a segurança de todos e considerar medicação apenas se a abordagem verbal falhar.', ok:true,
+      fb:'PSI — manejo do comportamento agitado ou agressivo: prioridade antes de continuar o algoritmo. Desescalada verbal em ambiente calmo vem antes do fármaco; contenção é último recurso, nunca punição.'},
+     {t:'Medicar imediatamente com dose alta intramuscular, antes de qualquer tentativa de conversa.', ok:false,
+      fb:'A abordagem verbal e ambiental vem primeiro; a medicação entra quando a desescalada falha — e na menor dose eficaz.'},
+     {t:'Chamar a polícia e suspender o atendimento até ele se acalmar sozinho.', ok:false,
+      fb:'Agitação psicótica é quadro clínico, não caso de polícia: o serviço maneja com equipe, ambiente e protocolo.'}
+    ],
+    licao:'Agitação aguda: desescalada verbal e ambiente seguro primeiro; medicação se falhar; contenção como último recurso.'},
+   {ctx:'Davi melhora quando toma o antipsicótico oral, mas já recaiu duas vezes por abandono do comprimido, apesar do apoio da família.',
+    q:'Quando considerar o antipsicótico de depósito (injetável de ação prolongada)?',
+    opts:[
+     {t:'Neste perfil: má adesão persistente ao oral com recaídas — nunca como porta de entrada do tratamento, evitando-o em gestantes/lactantes e sem uso em crianças e adolescentes.', ok:true,
+      fb:'A flufenazina de depósito (12,5–50 mg IM a cada 2–4 semanas) serve à manutenção quando a adesão oral falha; é evitada em gestantes/lactantes e não se usa em menores.'},
+     {t:'Em todo primeiro episódio, para garantir a adesão desde o início.', ok:false,
+      fb:'No início calibram-se dose e efeitos com o oral. O depósito é ferramenta de manutenção, não de entrada.'},
+     {t:'Nunca: injetáveis de ação prolongada violam a autonomia do paciente.', ok:false,
+      fb:'Com consentimento informado, o depósito pode ser o que mantém a pessoa estável e livre na comunidade — autonomia real inclui não recair.'}
+    ],
+    licao:'Depósito: manutenção quando a adesão oral falha; nunca no início; evitar em gestantes e menores.'}
+  ]}
+]},
+
+/* ---------- 3. EPI ---------- */
+{ code:'EPI', emoji:'⚡', nome:'Epilepsia',
+  desc:'Emergência convulsiva, eclâmpsia, diagnóstico e antiepilépticos.',
+  badge:{emoji:'🛡️', name:'Guardião da Crise'},
+  intro:'Uma convulsão em plena sala de espera. Aja na ordem certa — cada minuto conta.',
+  acts:[
+  {type:'ordena', data:{
+    intro:'<span class="who">Sala de espera.</span> Um homem cai em convulsão tônico-clônica. Toque as ações <b>na sequência do algoritmo de emergência EPI</b>.',
+    itens:[
+     'Garantir segurança: decúbito lateral, nada na boca, algo macio sob a cabeça, não deixar sozinho',
+     'Avaliar vias aéreas, respiração e circulação; verificar PA, temperatura e FR; cronometrar a crise',
+     'Obter acesso IV se possível (e encaminhar com urgência se trauma craniano, febre ou déficit focal)',
+     'Administrar medicamento de emergência: diazepam IV/retal ou midazolam bucal/intranasal',
+     'Se a crise persistir após 10 min, dar a 2ª dose — máximo de 2 doses — e encaminhar com urgência'
+    ],
+    licao:'Emergência EPI: proteger → ABC e cronometrar → acesso IV → benzodiazepínico → 2ª dose no máximo e hospital.'}},
+  {type:'cenario', data:[
+   {ctx:'<span class="who">Gestante, 34 semanas</span>, sem história de epilepsia, convulsiona na unidade.',
+    q:'Qual é a hipótese e a conduta imediata?',
+    opts:[
+     {t:'Suspeitar de ECLÂMPSIA: sulfato de magnésio 10 g IM, hidralazina se PA diastólica > 110 mmHg, e encaminhar ao hospital com urgência.', ok:true,
+      fb:'Convulsão na 2ª metade da gravidez (ou até 1 semana pós-parto) sem antecedente de epilepsia = eclâmpsia até prova em contrário.'},
+     {t:'Administrar diazepam IV conforme o protocolo padrão de convulsão e agendar retorno em uma semana.', ok:false,
+      fb:'É o protocolo certo para a convulsão comum — mas gestante na 2ª metade sem epilepsia prévia tem ramo próprio: sulfato de magnésio e hospital com urgência. Aplicar o fluxo padrão atrasa o tratamento da eclâmpsia.'},
+     {t:'Controlar a crise, solicitar EEG ambulatorial e iniciar investigação de epilepsia de início tardio.', ok:false,
+      fb:'Investigar epilepsia nova é razoável em outros contextos — aqui, a prioridade absoluta é a hipótese de eclâmpsia, que mata mãe e bebê em horas.'}
+    ],
+    licao:'Convulsão na 2ª metade da gestação sem epilepsia prévia = eclâmpsia: sulfato de magnésio + hospital.'},
+   {ctx:'<span class="who">Marcos, 19 anos</span>, teve uma única crise convulsiva há um mês, após noite sem dormir. Exame neurológico normal.',
+    q:'Ele tem epilepsia? Deve iniciar antiepiléptico?',
+    opts:[
+     {t:'Ainda não: o diagnóstico exige pelo menos DUAS crises em dias diferentes no último ano. Sem critério, sem medicamento — seguimento em 3 meses.', ok:true,
+      fb:'Critério diagnóstico do EPI 1. Uma crise isolada não fecha epilepsia; agende reavaliação e investigue causas.'},
+     {t:'Iniciar antiepiléptico em dose baixa por segurança: uma segunda crise poderia ocorrer dirigindo ou nadando.', ok:false,
+      fb:'A prudência aqui é NÃO medicar: sem o critério (≥ 2 crises em dias diferentes no último ano), o antiepiléptico só traz efeitos colaterais. Oriente precauções e reavalie em 3 meses.'},
+     {t:'Encaminhar para neurologia e aguardar EEG e neuroimagem antes de qualquer definição.', ok:false,
+      fb:'O diagnóstico no MI-mhGAP é clínico e cabe à atenção primária: contar crises no último ano e investigar causas. Especialista entra nos casos duvidosos ou refratários.'}
+    ],
+    licao:'Epilepsia = ≥ 2 crises em dias diferentes no último ano; crise única → seguimento, sem fármaco.'},
+   {ctx:'<span class="who">Luana, 26 anos</span>, tem epilepsia confirmada e quer engravidar no futuro.',
+    q:'Que cuidados o módulo exige nessa população especial?',
+    opts:[
+     {t:'Prescrever folato 5 mg/dia a toda mulher em idade reprodutiva, EVITAR valproato, preferir monoterapia na dose mínima eficaz.', ok:true,
+      fb:'Populações especiais do EPI: folato para prevenir defeitos do tubo neural, sem valproato (teratogênico), sem politerapia; parto hospitalar e vitamina K ao recém-nascido.'},
+     {t:'Manter o esquema atual com valproato: trocar um medicamento que controla bem as crises aumentaria o risco.', ok:false,
+      fb:'A inércia é o erro: o valproato deve ser EVITADO em mulheres em idade reprodutiva (defeitos do tubo neural). A troca é planejada, gradual, antes da gravidez.'},
+     {t:'Suspender gradualmente o antiepiléptico assim que ela engravidar, para proteger o feto.', ok:false,
+      fb:'Crises na gestação também ameaçam mãe e feto. A regra é ajustar (monoterapia, dose mínima, folato), não suspender — e qualquer redução é gradual e supervisionada.'}
+    ],
+    licao:'Mulher em idade reprodutiva com epilepsia: folato 5 mg/dia, evitar valproato, evitar politerapia.'},
+   {ctx:'A família de um paciente com epilepsia pede orientações para o dia a dia.',
+    q:'Qual conjunto de orientações está correto?',
+    opts:[
+     {t:'Crise > 5 minutos é emergência; evitar cozinhar em fogo aberto e nadar sozinho; pode trabalhar na maioria dos empregos; epilepsia não é contagiosa.', ok:true,
+      fb:'Psicoeducação do EPI: com boa adesão, a maioria tem vida normal — com precauções específicas e respeito às leis locais de direção veicular.'},
+     {t:'Durante a crise, virar de lado e introduzir um pano macio entre os dentes para proteger a língua.', ok:false,
+      fb:'A primeira metade está certa (decúbito lateral) — mas NUNCA se introduz NADA na boca, nem pano macio: risco de asfixia e broncoaspiração. É o mito mais perigoso sobre epilepsia.'},
+     {t:'Liberar todas as atividades sem restrição, para combater o estigma da doença.', ok:false,
+      fb:'Combater o estigma, sim — mas mantendo as precauções reais: fogo aberto, nadar sozinho, máquinas pesadas, privação de sono e álcool em excesso seguem contraindicados.'}
+    ],
+    licao:'Psicoeducação EPI: crise > 5 min = emergência; nada na boca; precauções pontuais; vida normal com adesão.'},
+   {ctx:'<span class="who">Menina, 3 anos</span>, com febre alta, teve uma crise convulsiva generalizada de 4 minutos, única, sem sinais focais. Recuperou-se bem.',
+    q:'Conduta?',
+    opts:[
+     {t:'Crise febril simples: investigar a causa da febre (diretrizes AIDPI), observar por 24 horas — sem tratamento antiepiléptico.', ok:true,
+      fb:'EPI: a crise febril simples não requer antiepiléptico; o foco é identificar e tratar a causa da febre.'},
+     {t:'Iniciar fenobarbital para prevenir novas crises febris.', ok:false,
+      fb:'Não há indicação de profilaxia na crise febril simples — e o fenobarbital em criança tem custo cognitivo e comportamental real.'},
+     {t:'Diagnosticar epilepsia de início precoce e tratar como tal.', ok:false,
+      fb:'Crise febril não é epilepsia: falta o critério (crises recorrentes). O rótulo precoce estigmatiza sem tratar nada.'}
+    ],
+    licao:'Crise febril simples: investigar a febre, observar 24h, sem antiepiléptico.'},
+   {ctx:'Outra criança, 2 anos, com febre: a crise foi focal (começou na mão direita), durou mais de 15 minutos e repetiu no mesmo dia.',
+    q:'O que muda?',
+    opts:[
+     {t:'É crise febril COMPLEXA (focal, prolongada ou repetida): encaminhar ao hospital para internação.', ok:true,
+      fb:'EPI: os três marcadores de complexidade — focal, duração > 15 minutos, mais de 1 episódio na mesma doença — mudam a conduta para internação hospitalar.'},
+     {t:'A mesma conduta da crise simples: antitérmico, observação domiciliar e retorno se repetir.', ok:false,
+      fb:'Os marcadores de complexidade indicam risco maior (neuroinfecção, lesão estrutural): a avaliação hospitalar é obrigatória.'},
+     {t:'Fazer punção lombar na própria unidade antes de decidir.', ok:false,
+      fb:'A investigação avançada pertence ao hospital — o papel da atenção primária é reconhecer a complexidade e encaminhar com urgência.'}
+    ],
+    licao:'Crise febril focal, > 15 min ou repetida = complexa: hospital para internação.'},
+   {ctx:'Na emergência da unidade, a convulsão persiste mesmo após as 2 doses de diazepam.',
+    q:'E agora?',
+    opts:[
+     {t:'Provável estado de mal epiléptico: manejo em estabelecimento de saúde — ABC contínuo, oxigênio e antiepiléptico IV (valproato, fenobarbital ou fenitoína), SEM terceira dose de benzodiazepínico.', ok:true,
+      fb:'EPI: não administre mais de 2 doses do medicamento de emergência. A fenitoína exige acesso IV próprio e seguro — causa dano grave se extravasar.'},
+     {t:'Repetir o diazepam a cada 10 minutos até a crise ceder.', ok:false,
+      fb:'O limite é 2 doses: além disso cresce o risco de depressão respiratória, e o protocolo muda para os antiepilépticos IV.'},
+     {t:'Aguardar: convulsões cessam sozinhas; o excesso de medicação é o verdadeiro perigo.', ok:false,
+      fb:'O estado de mal epiléptico lesa o cérebro a cada minuto e tem alta mortalidade — é das maiores emergências neurológicas.'}
+    ],
+    licao:'Sem resposta após 2 doses de benzodiazepínico: estado de mal — antiepiléptico IV em ambiente hospitalar.'},
+   {ctx:'<span class="who">Jovem, 22 anos</span>: desmaiou na fila do banco. Antes, sentiu calor, suor frio, palidez e "a vista escurecendo". Recuperou-se em segundos, com leve tremor ao final.',
+    q:'Como interpretar?',
+    opts:[
+     {t:'Quadro típico de SÍNCOPE (pródromos + recuperação rápida) — não tratar como epilepsia.', ok:true,
+      fb:'Dica Clínica do EPI: a síncope costuma ser precedida de rubor, sudorese, palidez e escurecimento visual, com leve tremor ao final. Sempre cogitar síncope e pseudocrise na avaliação.'},
+     {t:'Primeira crise epiléptica: os tremores ao final confirmam a natureza convulsiva.', ok:false,
+      fb:'Abalos breves no fim da síncope são comuns e enganam — o conjunto (pródromos, recuperação imediata) aponta síncope.'},
+     {t:'Pseudocrise epiléptica desencadeada pelo estresse da fila.', ok:false,
+      fb:'Pseudocrises costumam ser prolongadas, com abalos arrítmicos e olhos fechados — o quadro descrito é a síncope clássica.'}
+    ],
+    licao:'Pródromos (palidez, sudorese, escurecimento visual) + recuperação rápida = síncope, não epilepsia.'},
+   {ctx:'<span class="who">Luana</span> controla as crises com carbamazepina e usa anticoncepcional oral.',
+    q:'Há algo a orientar?',
+    opts:[
+     {t:'Sim: antiepilépticos podem reduzir o efeito de anticoncepcionais hormonais — revisar o método contraceptivo com ela.', ok:true,
+      fb:'EPI — atenção às interações: antiepilépticos interagem entre si e reduzem o efeito de anticoncepcionais hormonais, imunossupressores, antipsicóticos, metadona e antirretrovirais.'},
+     {t:'Não: são classes diferentes, sem interação clinicamente relevante.', ok:false,
+      fb:'A interação existe e o resultado é gravidez não planejada em uso de antiepiléptico — justamente o cenário a evitar.'},
+     {t:'Orientar a suspender o anticoncepcional, já que o antiepiléptico é prioritário.', ok:false,
+      fb:'Não se escolhe entre os dois: ajusta-se o método contraceptivo — e mantém-se o folato 5 mg/dia.'}
+    ],
+    licao:'Antiepilépticos reduzem o efeito de anticoncepcionais hormonais: revisar o método.'},
+   {ctx:'<span class="who">Paciente com epilepsia</span> está há mais de 2 anos sem nenhuma crise, em monoterapia bem tolerada.',
+    q:'Pode parar o medicamento?',
+    opts:[
+     {t:'Pode-se considerar a retirada — sempre GRADUAL, pois a interrupção abrupta provoca o ressurgimento das crises.', ok:true,
+      fb:'EPI: todos os anticonvulsivantes devem ser interrompidos gradualmente. Decisão compartilhada, com plano de retorno caso as crises reapareçam.'},
+     {t:'Sim, suspender de uma vez: 2 anos sem crises significa cura.', ok:false,
+      fb:'A interrupção abrupta é gatilho clássico de recorrência — inclusive de estado de mal. Sempre gradual.'},
+     {t:'Não: antiepiléptico é para a vida toda, sem exceções.', ok:false,
+      fb:'Após controle prolongado, a retirada gradual é opção legítima do manual — manter para sempre não é regra.'}
+    ],
+    licao:'Retirada de antiepiléptico: possível após controle prolongado, sempre gradual.'},
+   {ctx:'<span class="who">Paciente com epilepsia vive com HIV</span>, em uso de antirretrovirais.',
+    q:'Qual antiepiléptico o módulo prefere?',
+    opts:[
+     {t:'Valproato, por ter menos interações medicamentosas — EVITANDO fenitoína e carbamazepina quando possível, e conferindo as interações do esquema antirretroviral.', ok:true,
+      fb:'EPI — populações especiais (HIV): a preocupação é a interação antiepiléptico × antirretroviral; o valproato é preferível, e fenitoína/carbamazepina devem ser evitadas.'},
+     {t:'Carbamazepina, o padrão para crises focais em qualquer população.', ok:false,
+      fb:'Na pessoa com HIV a carbamazepina é justamente uma das que se evita: interfere no metabolismo dos antirretrovirais e compromete o controle viral.'},
+     {t:'Nenhum: antiepilépticos são contraindicados com antirretrovirais; tratar apenas as crises agudas.', ok:false,
+      fb:'A epilepsia deve ser tratada — a resposta é ESCOLHER o fármaco com menos interações (valproato), não abrir mão do tratamento.'}
+    ],
+    licao:'Epilepsia + HIV: preferir valproato; evitar fenitoína e carbamazepina (interações com antirretrovirais).'},
+   {ctx:'Epilepsia confirmada em <span class="who">Marcos, agora com duas crises documentadas</span>. Hora de investigar a causa.',
+    q:'O que a anamnese e o exame devem buscar?',
+    opts:[
+     {t:'História de asfixia ou traumatismo ao nascimento, traumatismo cranioencefálico, infecção encefálica e história familiar de crises — com exame neurológico atento a déficits focais (assimetrias de força e reflexos).', ok:true,
+      fb:'EPI 1: investigar a causa subjacente com exame físico e neurológico, encaminhando ao especialista para avaliação complementar quando indicado.'},
+     {t:'Nada: epilepsia é idiopática por definição e a causa não muda a conduta.', ok:false,
+      fb:'Muitos casos têm causa identificável (perinatal, TCE, neuroinfecção) — e achados focais mudam a investigação e o encaminhamento.'},
+     {t:'Apenas dosagem de eletrólitos; o restante é atribuição do especialista.', ok:false,
+      fb:'A anamnese causal completa é da atenção primária; o especialista entra na avaliação complementar dos casos indicados.'}
+    ],
+    licao:'Causas da epilepsia: asfixia/trauma ao nascer, TCE, infecção encefálica, história familiar; exame neurológico com foco em déficits.'}
+  ]}
+]},
+
+/* ---------- 4. MCO ---------- */
+{ code:'MCO', emoji:'🧒', nome:'Crianças e adolescentes',
+  desc:'Desenvolvimento, comportamento, TDAH e depressão no adolescente.',
+  badge:{emoji:'🌱', name:'Semente Bem Cuidada'},
+  intro:'Transtornos mentais e comportamentais de crianças e adolescentes: aqui, medicar quase nunca é o primeiro passo.',
+  acts:[
+  {type:'cenario', data:[
+   {ctx:'<span class="who">Théo, 8 anos</span>, trazido pela mãe: inquieto, distraído, "não para sentado" e vai mal na escola.',
+    q:'Qual é a primeira conduta do módulo MCO?',
+    opts:[
+     {t:'Avaliar os ambientes doméstico e escolar, orientar o bem-estar da criança, dar orientações de comportamento aos pais e contatar a escola.', ok:true,
+      fb:'A avaliação MCO inclui ambiente doméstico e escolar; o manejo inicial é psicossocial: psicoeducação, aconselhamento parental e articulação com professores.'},
+     {t:'Iniciar risperidona em dose baixa para reduzir a agitação enquanto a investigação avança.', ok:false,
+      fb:'Medicalizar a agitação infantil é erro frequente: risperidona não tem lugar aqui, e nenhum fármaco é primeira linha em problemas de comportamento no MCO.'},
+     {t:'Aplicar um teste padronizado de TDAH e, se positivo, já iniciar o tratamento medicamentoso.', ok:false,
+      fb:'O diagnóstico não dispensa a avaliação dos ambientes — e mesmo com TDAH confirmado, o fármaco só entra após insucesso das intervenções psicossociais, via especialista.'}
+    ],
+    licao:'MCO: começar pela avaliação dos ambientes e por intervenções psicossociais — nunca pelo fármaco.'},
+   {ctx:'Após meses de intervenções bem conduzidas, Théo mantém critérios claros de TDAH e grande prejuízo escolar.',
+    q:'Próximo passo correto?',
+    opts:[
+     {t:'Encaminhar ao especialista para considerar metilfenidato (insucesso psicossocial + TDAH + idade ≥ 6 anos).', ok:true,
+      fb:'É a condição tripla do Protocolo 3. A prescrição de metilfenidato é decisão do especialista, com seguimento a cada 3 meses ou mais frequente.'},
+     {t:'Prescrever metilfenidato na própria unidade: os três critérios estão preenchidos e o especialista demora meses.', ok:false,
+      fb:'Os critérios autorizam o ENCAMINHAMENTO, não a prescrição na atenção primária: o metilfenidato exige supervisão de especialista. Enquanto aguarda, mantenha as intervenções psicossociais.'},
+     {t:'Intensificar as intervenções psicossociais por mais um ano antes de considerar qualquer encaminhamento.', ok:false,
+      fb:'Prolongar indefinidamente o que já falhou adia o cuidado: com insucesso documentado + TDAH + idade ≥ 6 anos, o algoritmo manda encaminhar.'}
+    ],
+    licao:'Metilfenidato: só após insucesso psicossocial, com TDAH confirmado, ≥ 6 anos e via especialista.'},
+   {ctx:'<span class="who">Alice, 4 anos</span>, com atraso importante de fala e marcos do desenvolvimento.',
+    q:'O manejo do transtorno do desenvolvimento inclui…',
+    opts:[
+     {t:'Psicoeducação e aconselhamento aos cuidadores, treinamento de habilidades parentais, contato com a escola, encaminhamento ao especialista — e NÃO oferecer tratamento farmacológico.', ok:true,
+      fb:'Protocolo 1 do MCO. O apoio ao cuidador e a articulação escola-comunidade são o núcleo; o manual proíbe fármaco para o atraso do desenvolvimento em si.'},
+     {t:'Encaminhar ao especialista e aguardar a avaliação antes de orientar a família ou contatar a escola.', ok:false,
+      fb:'O encaminhamento é parte do plano, mas não suspende o resto: psicoeducação, habilidades parentais e articulação com a escola começam JÁ, na atenção primária.'},
+     {t:'Tranquilizar a família ("cada criança tem seu ritmo") e reavaliar formalmente em um ano.', ok:false,
+      fb:'A variação normal existe, mas atraso IMPORTANTE de marcos pede ação imediata — esperar um ano perde a janela de estimulação precoce. Seguimento é a cada 3 meses.'}
+    ],
+    licao:'Transtorno do desenvolvimento: manejo psicossocial e intersetorial imediato; sem fármacos.'},
+   {ctx:'<span class="who">Sofia, 15 anos</span>, com depressão moderada a grave persistente apesar das intervenções psicossociais bem aplicadas.',
+    q:'Se for indicada medicação, qual é a regra do manual?',
+    opts:[
+     {t:'Fluoxetina (nunca outro ISRS nem tricíclico) e retorno semanal nas 4 primeiras semanas para monitorar pensamentos ou planos de suicídio.', ok:true,
+      fb:'DEP/MCO: em adolescentes (≥ 12 anos), fluoxetina é a única opção citada — com vigilância ativa, pois antidepressivos podem aumentar ideação suicida em jovens.'},
+     {t:'Sertralina, por ter perfil de efeitos colaterais mais leve que a fluoxetina nessa faixa etária.', ok:false,
+      fb:'Distração plausível: sertralina é usada em outras diretrizes, mas o MI-mhGAP indica APENAS fluoxetina em adolescentes — nenhum outro ISRS ou tricíclico.'},
+     {t:'Fluoxetina com retorno mensal, padrão de seguimento dos adultos estáveis.', ok:false,
+      fb:'O fármaco está certo; o seguimento, não: adolescentes voltam TODA SEMANA nas 4 primeiras semanas, porque o risco de ideação suicida aumenta justamente no início.'}
+    ],
+    licao:'Depressão no adolescente: fluoxetina como única opção; retorno semanal no 1º mês para vigiar ideação suicida.'},
+   {ctx:'<span class="who">Lara, 9 anos</span>: dor de barriga quase toda manhã de dia de aula — some nos fins de semana. Exames normais. Chora para não ir à escola.',
+    q:'Qual é a leitura do módulo?',
+    opts:[
+     {t:'Provável problema emocional (sintomas físicos recorrentes sem explicação + recusa escolar): explorar estressores — inclusive na escola — e orientar cuidadores e professores.', ok:true,
+      fb:'MCO: queixas somáticas recorrentes e recusa escolar são manifestações emocionais típicas da infância. Investigar bullying e estressores; manejo psicossocial, sem fármaco.'},
+     {t:'Prescrever antiespasmódico contínuo e orientar que ela vá à aula assim mesmo.', ok:false,
+      fb:'Medicar o sintoma e forçar a exposição sem investigar o estressor deixa a causa intocada — e ensina à criança que a queixa dela não é ouvida.'},
+     {t:'Encaminhar à gastroenterologia para endoscopia antes de considerar causas emocionais.', ok:false,
+      fb:'Com exames normais e padrão claramente ligado à escola, multiplicar exames adia o cuidado (a mesma lógica do módulo OUT).'}
+    ],
+    licao:'Sintomas físicos recorrentes + recusa escolar = problema emocional: explorar estressores, orientar casa e escola.'},
+   {ctx:'<span class="who">Pedro, 16 anos</span>, procura a unidade sozinho, angustiado, e pede que os pais não saibam da consulta.',
+    q:'Como proceder?',
+    opts:[
+     {t:'Atendê-lo: obter o consentimento dele, dar espaço para falar em particular, adaptar a linguagem — e avaliar riscos que possam exigir envolver a rede de proteção.', ok:true,
+      fb:'MCO/PCE: trate adolescentes que venham sozinhos, com consentimento próprio, dando oportunidade de expressar preocupações em particular.'},
+     {t:'Explicar que menores só podem ser atendidos com responsável presente e reagendar.', ok:false,
+      fb:'O manual manda o contrário — exigir responsável é a barreira que afasta adolescentes do cuidado exatamente quando mais precisam.'},
+     {t:'Atendê-lo, mas ligar para os pais ao final relatando o conteúdo, por dever de informação.', ok:false,
+      fb:'Quebra o sigilo e a confiança. Os cuidadores entram com o consentimento do adolescente — salvo risco que exija proteção.'}
+    ],
+    licao:'Adolescente desacompanhado: atender com consentimento próprio e escuta em particular.'},
+   {ctx:'<span class="who">Caio, 7 anos</span>: mudança súbita de comportamento — agressividade, retraimento e volta do xixi na cama, que havia cessado há anos.',
+    q:'O que a avaliação MCO exige?',
+    opts:[
+     {t:'Investigar com cuidado a possível exposição a fatores adversos — violência, abuso ou negligência — e acionar uma rede de proteção confiável se necessário.', ok:true,
+      fb:'MCO: mudanças súbitas de comportamento e regressões pedem investigação de maus-tratos. O manejo de abuso inclui recursos legais e comunitários (PCE).'},
+     {t:'Orientar disciplina mais firme: limites claros costumam resolver regressões comportamentais.', ok:false,
+      fb:'Endurecer a disciplina sobre uma criança possivelmente vitimizada agrava o dano. Primeiro entender o que mudou na vida dela.'},
+     {t:'Encaminhar para avaliação de TDAH, dado o comportamento agitado.', ok:false,
+      fb:'TDAH é crônico e de início gradual — mudança SÚBITA com regressão aponta um evento na vida da criança, não transtorno do neurodesenvolvimento.'}
+    ],
+    licao:'Mudança súbita de comportamento na criança: investigar violência, abuso e negligência.'},
+   {ctx:'Pais exaustos relatam birras intensas e desobediência do filho de 6 anos. "Já tentamos de tudo, até palmada."',
+    q:'O que oferecer?',
+    opts:[
+     {t:'Treinamento de habilidades parentais: atenção positiva, elogiar o comportamento desejado, instruções claras e consequências consistentes e não violentas.', ok:true,
+      fb:'MCO 2.8: as habilidades parentais são a intervenção recomendada para problemas de comportamento — a punição física é contraproducente e danosa.'},
+     {t:'Validar a palmada "com moderação" como último recurso legítimo dos pais.', ok:false,
+      fb:'A violência física ensina violência e corrói o vínculo — nunca é recomendada. As alternativas estruturadas funcionam melhor.'},
+     {t:'Prescrever risperidona em dose baixa para as birras.', ok:false,
+      fb:'NÃO se oferece fármaco para problemas comuns de comportamento: o tratamento é a mudança do ambiente e das interações.'}
+    ],
+    licao:'Problemas de comportamento: habilidades parentais — atenção positiva e consequências não violentas.'},
+   {ctx:'A mãe de Alice (transtorno do desenvolvimento) chora na consulta: "Não aguento mais, cuido dela sozinha."',
+    q:'O módulo orienta…',
+    opts:[
+     {t:'Avaliar as necessidades da cuidadora, oferecer apoio psicossocial e informação, e conectá-la a grupos de apoio e recursos da comunidade.', ok:true,
+      fb:'MCO 2.6 — apoio para o cuidador: o bem-estar de quem cuida é condição do cuidado. Avaliar o impacto psicossocial e a rede disponível.'},
+     {t:'Manter o foco na criança: a mãe deve procurar atendimento próprio em outra agenda.', ok:false,
+      fb:'O apoio ao cuidador É intervenção do módulo da criança — separar os cuidados perde a oportunidade e perde a mãe.'},
+     {t:'Lembrá-la de que "mãe não pode fraquejar" e reforçar a importância da dedicação.', ok:false,
+      fb:'Cobrança sobre exaustão produz colapso — reconhecer a sobrecarga e apoiar é o que sustenta o cuidado em longo prazo.'}
+    ],
+    licao:'Apoiar o cuidador: avaliar necessidades, oferecer apoio e grupos — parte do manejo MCO.'},
+   {ctx:'Théo (TDAH) iniciou o plano de manejo com a família e a escola.',
+    q:'Qual é o esquema de seguimento?',
+    opts:[
+     {t:'Retornos a cada 3 meses (ou mais frequentes, se necessário), mantendo contato com professores e demais recursos da comunidade.', ok:true,
+      fb:'MCO: seguimento apropriado a cada 3 meses ou mais frequente, com articulação contínua com a escola.'},
+     {t:'Reavaliação anual, tempo suficiente para observar mudanças de comportamento.', ok:false,
+      fb:'Um ano é uma era na vida escolar de uma criança — ajustes de plano precisam de ciclos curtos.'},
+     {t:'Retornar apenas se a escola registrar novas queixas.', ok:false,
+      fb:'Terceirizar o monitoramento à escola inverte os papéis: o serviço de saúde mantém o seguimento ativo.'}
+    ],
+    licao:'Seguimento MCO: a cada 3 meses ou mais frequente, com contato escolar contínuo.'}
+  ]}
+]},
+
+/* ---------- 5. DEM ---------- */
+{ code:'DEM', emoji:'🧓', nome:'Demência',
+  desc:'Memória, delirium, pseudodemência e apoio ao cuidador.',
+  badge:{emoji:'🕰️', name:'Memória Protegida'},
+  intro:'Esquecimento em idosos nem sempre é demência — comece ouvindo quem convive com a pessoa.',
+  acts:[
+  {type:'anamnese', data:{
+    intro:'<span class="who">Dona Zilda, 74 anos</span>, vem à consulta com o filho. Ele diz: "Minha mãe anda muito esquecida, doutor."',
+    max:4,
+    itens:[
+     {t:'Entrevistar o filho (informante): quando começou, como evoluiu, piora com o tempo?', ok:true,
+      resp:'"Começou há mais de 1 ano. Bem devagarzinho, e só piora. Esquece o que houve ontem."',
+      note:'Dica Clínica do DEM: entrevistar quem conhece bem a pessoa é o primeiro passo — início e progressão diferenciam demência de delirium.'},
+     {t:'Perguntar sobre as atividades diárias: contas, compras, cozinha, remédios.', ok:true,
+      resp:'"Ela errou pagamentos duas vezes e queimou panelas. Já não deixamos mais cozinhar sozinha."',
+      note:'Prejuízo funcional é critério central da suspeita de demência.'},
+     {t:'Investigar humor: tristeza, choro, desesperança, perda de prazer.', ok:true,
+      resp:'"Não, ela é animada. Vai à igreja, ri com os netos."',
+      note:'Descarta pseudodemência: depressão pode mimetizar demência e é reversível.'},
+     {t:'Revisar doenças, medicamentos em uso (anticolinérgicos!) e sinais de infecção.', ok:true,
+      resp:'"Hipertensão controlada. Nenhum remédio novo, nenhuma infecção recente."',
+      note:'Afasta delirium e causas tratáveis (fármacos, infecção, distúrbios metabólicos).'},
+     {t:'Aplicar imediatamente perguntas-pegadinha de memória na frente da família ("que dia é hoje? quem é o presidente?").', ok:false,
+      resp:'Dona Zilda se encolhe, constrangida, e passa a responder "não sei" para tudo.',
+      note:'Testar cognição exige ambiente adequado e respeito (PCE) — expor a pessoa ao fracasso diante da família contamina a própria avaliação.'},
+     {t:'Solicitar tomografia de crânio antes de qualquer anamnese, para "objetivar" o caso.', ok:false,
+      resp:'O filho pergunta, preocupado, se é tumor — e a consulta se desvia da história clínica.',
+      note:'A suspeita de demência no MI-mhGAP é clínica: história com informante + funcionalidade + curso temporal vêm antes de qualquer exame.'}
+    ],
+    licao:'Suspeita de demência: informante, funcionalidade, humor (pseudodemência) e revisão de causas (delirium).'}},
+  {type:'cenario', data:[
+   {ctx:'Com a anamnese de <b>Dona Zilda</b> completa (declínio lento > 1 ano, prejuízo funcional, sem depressão, sem causa aguda), compare com outro caso: <b>Seu Osvaldo, 80 anos</b>, confuso <b>há 3 dias</b>, pior à noite, ora lúcido ora desorientado, urina turva e fétida.',
+    q:'Qual é a leitura correta dos dois casos?',
+    opts:[
+     {t:'Zilda: suspeita de demência (curso lento, ≥ 6 meses). Osvaldo: DELIRIUM por causa aguda (provável infecção urinária) — investigar e tratar já.', ok:true,
+      fb:'DEM 1: início abrupto + flutuação + piora noturna = delirium, emergência tratável. Curso lento e progressivo com prejuízo funcional = suspeita de demência.'},
+     {t:'Ambos têm demência; a de Osvaldo apenas evoluiu mais rápido, como ocorre em idosos mais velhos.', ok:false,
+      fb:'"Demência de 3 dias" não existe: quadro agudo e flutuante é delirium até prova em contrário — e a causa (infecção, fármaco, desidratação) exige tratamento imediato.'},
+     {t:'Ambos precisam primeiro de neuroimagem para diferenciar demência de delirium.', ok:false,
+      fb:'A diferenciação é CLÍNICA: tempo de instalação, flutuação e piora noturna. Em Osvaldo, o exame prioritário é o de urina, não a imagem.'}
+    ],
+    licao:'Início abrupto + flutuação + piora noturna = delirium; curso lento ≥ 6 meses + prejuízo = suspeita de demência.'},
+   {ctx:'<span class="who">Dona Neusa, 70 anos</span>, esquecida há 4 meses, mas o exame revela: humor deprimido intenso, choro, desesperança e perda de prazer.',
+    q:'O que o algoritmo sugere?',
+    opts:[
+     {t:'Possível "pseudodemência" por depressão: tratar a depressão (vá para DEP) e só depois reavaliar os critérios de demência.', ok:true,
+      fb:'O comprometimento cognitivo pode ser consequência da depressão. Tratar primeiro, reavaliar depois — evita rotular como demência algo reversível.'},
+     {t:'Tratar as duas condições ao mesmo tempo: antidepressivo + inibidor de colinesterase, cobrindo as duas hipóteses.', ok:false,
+      fb:'"Cobrir tudo" soa seguro, mas o manual veta a prescrição de rotina de inibidores de colinesterase — e a sequência correta é tratar a depressão e REAVALIAR a cognição.'},
+     {t:'Priorizar a queixa cognitiva, que é mais grave, e deixar o humor para o retorno.', ok:false,
+      fb:'É a ordem invertida: a depressão pode ser a CAUSA do déficit cognitivo. Tratá-la primeiro pode resolver as duas queixas.'}
+    ],
+    licao:'Depressão pode mimetizar demência (pseudodemência): tratar DEP antes de fechar o diagnóstico.'},
+   {ctx:'Dona Zilda (demência confirmada) passou a ter agitação no fim do dia. A família, exausta, pede "um remédio forte para acalmá-la".',
+    q:'Conduta correta?',
+    opts:[
+     {t:'Intervenções psicossociais primeiro; antipsicótico apenas se os sintomas persistirem com risco iminente de dano — em dose mínima, com revisão periódica. Avaliar e apoiar o cuidador.', ok:true,
+      fb:'DEM 2.7: psicossocial antes do fármaco; antipsicóticos elevam risco cerebrovascular e de morte em idosos com demência; evitar haloperidol IV e diazepam. E o cuidador também é paciente.'},
+     {t:'Haloperidol em dose baixa fixa à noite, já que a agitação é vespertina e recorrente.', ok:false,
+      fb:'Pular direto ao antipsicótico "profilático" é o erro: primeiro identificar gatilhos e intervir psicossocialmente. O fármaco só entra com risco iminente persistente — e com prazo de revisão.'},
+     {t:'Diazepam à noite: mais seguro que antipsicótico e melhora também o sono da paciente.', ok:false,
+      fb:'Parece mais brando, mas o manual manda EVITAR diazepam na demência: aumenta confusão, quedas e pode piorar a agitação (efeito paradoxal).'}
+    ],
+    licao:'Sintomas comportamentais na demência: psicossocial primeiro; antipsicótico só com risco iminente; apoiar o cuidador.'},
+   {ctx:'<span class="who">Dona Zilda</span> (demência) tem hipertensão descontrolada, diabetes e fuma.',
+    q:'Vale a pena tratar os fatores de risco?',
+    opts:[
+     {t:'Sim: recomendar a cessação do tabagismo e tratar hipertensão, diabetes e obesidade — reduzir os fatores cardiovasculares faz parte do manejo da demência.', ok:true,
+      fb:'DEM: os fatores de risco cardiovasculares aceleram o declínio (sobretudo o vascular). O módulo manda tratá-los ativamente.'},
+     {t:'Não: com a demência instalada, o controle desses fatores já não altera o curso.', ok:false,
+      fb:'Niilismo sem base: o controle vascular protege o cérebro remanescente e previne AVCs que derrubam a função de degrau em degrau.'},
+     {t:'Tratar apenas com suplementos antioxidantes, mais suaves para a idade.', ok:false,
+      fb:'Suplementos não substituem anti-hipertensivo, controle do diabetes e cessação do tabagismo — as medidas com efeito real.'}
+    ],
+    licao:'Na demência, tratar fatores cardiovasculares: fumo, hipertensão, diabetes, colesterol, obesidade.'},
+   {ctx:'O filho de Dona Zilda viu um anúncio: "Existe remédio que segura a memória, doutor? Quero o melhor para ela."',
+    q:'O que responde o módulo?',
+    opts:[
+     {t:'Inibidores de colinesterase (donepezila, galantamina, rivastigmina) e memantina NÃO devem ser prescritos de rotina — apenas com diagnóstico específico de doença de Alzheimer E apoio e monitoramento especializados.', ok:true,
+      fb:'DEM 2.6: prescrição condicionada ao diagnóstico específico e à supervisão. O núcleo do manejo da demência é psicossocial.'},
+     {t:'Prescrever donepezila já: quanto mais cedo, mais memória se preserva, em qualquer demência.', ok:false,
+      fb:'"Qualquer demência" é o erro: sem diagnóstico específico e monitoramento, o fármaco oferece efeitos colaterais sem benefício demonstrado.'},
+     {t:'Indicar ginkgo biloba, opção natural e sem riscos.', ok:false,
+      fb:'Sem evidência de eficácia — e "natural" não significa inócuo (interações, risco de sangramento). Não substitui o manejo real.'}
+    ],
+    licao:'Sem prescrição de rotina de anticolinesterásicos/memantina: só com diagnóstico específico e supervisão.'},
+   {ctx:'Dona Zilda ainda dirige o carro até a feira e cozinha sozinha no fogão a gás.',
+    q:'Como abordar os riscos?',
+    opts:[
+     {t:'Avaliar os riscos com a família e recomendar adaptações graduais (supervisão na cozinha, alternativas ao volante), preservando o máximo de autonomia e dignidade.', ok:true,
+      fb:'DEM: recomendar modificações apropriadas conforme a progressão da doença, equilibrando segurança e autonomia — princípio central do cuidado digno (PCE).'},
+     {t:'Determinar que ela não saia mais de casa nem entre na cozinha, eliminando os riscos de uma vez.', ok:false,
+      fb:'A restrição total antecipa a incapacidade, deprime e acelera o declínio funcional. Segurança se constrói por adaptação, não por confinamento.'},
+     {t:'Não interferir: enquanto não houver acidente, a autonomia dela é absoluta.', ok:false,
+      fb:'Esperar o acidente (incêndio, atropelamento) para agir é omissão — a avaliação de riscos é proativa.'}
+    ],
+    licao:'Segurança na demência: adaptações graduais que preservem autonomia — nem confinar, nem omitir.'},
+   {ctx:'A família pergunta o que fazer em casa para ajudar a memória e o dia a dia de Dona Zilda.',
+    q:'Quais orientações seguem o módulo?',
+    opts:[
+     {t:'Rotina regular com pistas de orientação (calendário, relógio, objetos familiares), atividade física, atividades prazerosas e estímulo às capacidades preservadas.', ok:true,
+      fb:'DEM — intervenções psicossociais: orientação para a realidade, estimulação, exercício e participação, ajustados ao estágio da doença.'},
+     {t:'Repouso e ambiente sem estímulos, para não confundi-la ainda mais.', ok:false,
+      fb:'A privação de estímulos acelera o declínio e a apatia. O caminho é estímulo dosado e rotina previsível.'},
+     {t:'Corrigir cada erro de memória na hora, treinando-a para não esquecer.', ok:false,
+      fb:'A correção constante humilha e gera agitação. Pistas ambientais ajudam mais que confrontos.'}
+    ],
+    licao:'Psicossocial na demência: rotina, pistas de orientação, atividade física e capacidades preservadas.'},
+   {ctx:'A filha-cuidadora de Dona Zilda está exausta, dormindo mal e faltando ao trabalho.',
+    q:'O que oferecer a ela?',
+    opts:[
+     {t:'Avaliar o impacto e as necessidades da cuidadora, explorar cuidados temporários (respite), ativar a rede de apoio da comunidade e considerar terapia — reconhecendo que cuidar é extremamente estressante.', ok:true,
+      fb:'DEM: a avaliação das necessidades do cuidador é etapa formal do módulo. Cuidador que colapsa leva junto o cuidado.'},
+     {t:'Lembrá-la de que a prioridade clínica é a mãe e sugerir que administre melhor o próprio tempo.', ok:false,
+      fb:'O manual dedica uma seção inteira ao cuidador — ignorá-lo é falha de manejo, não neutralidade.'},
+     {t:'Aconselhar a institucionalização imediata como única saída para a sobrecarga.', ok:false,
+      fb:'Antes disso há um leque: respite, divisão familiar do cuidado, grupos de apoio, terapia. A institucionalização não é resposta automática à exaustão.'}
+    ],
+    licao:'Avaliar e apoiar o cuidador (respite, rede, grupos) é etapa formal do módulo DEM.'},
+   {ctx:'<span class="who">Homem de 52 anos</span> com declínio cognitivo progressivo iniciado após um traumatismo craniano.',
+    q:'O que esse perfil exige?',
+    opts:[
+     {t:'Características incomuns (início antes dos 60 anos, associação com traumatismo): encaminhar ao especialista para investigação complementar.', ok:true,
+      fb:'DEM 1: início < 60 anos, associação com TCE ou AVC, sinais de hipotireoidismo (bócio, pulso lento, pele seca) ou história de IST/HIV = avaliação especializada.'},
+     {t:'Conduzir como demência comum, apenas de início mais precoce.', ok:false,
+      fb:'"Demência precoce comum" não existe como atalho: o perfil atípico esconde causas tratáveis ou específicas — investigar.'},
+     {t:'Atribuir o declínio à depressão pós-trauma e tratar com ISRS, sem mais investigação.', ok:false,
+      fb:'Considerar depressão é válido; ATRIBUIR sem investigar um declínio pós-traumático em pessoa jovem fecha a porta errada.'}
+    ],
+    licao:'Demência com características incomuns (< 60 anos, TCE, AVC, sinais sistêmicos): especialista.'},
+   {ctx:'Plano montado para Dona Zilda. Como acompanhar daqui em diante?',
+    q:'O seguimento do módulo inclui…',
+    opts:[
+     {t:'Consultas regulares avaliando funcionamento, segurança, sintomas comportamentais, efeitos de medicamentos e as necessidades do cuidador — a demência progride e o plano se ajusta.', ok:true,
+      fb:'DEM: rotina de avaliação em cada consulta, com modificações de manejo e de segurança conforme a progressão da doença.'},
+     {t:'Sem seguimento estruturado: sendo doença sem cura, acompanhar não muda o desfecho.', ok:false,
+      fb:'Não há cura, mas há MUITO desfecho modificável: quedas, delirium, sobrecarga do cuidador, agitação, segurança. O seguimento previne cada um.'},
+     {t:'Retornos apenas nas crises, para não sobrecarregar a família com consultas.', ok:false,
+      fb:'O cuidado só nas crises É a sobrecarga: o acompanhamento regular antecipa problemas e poupa a família das emergências.'}
+    ],
+    licao:'Seguimento da demência: regular e proativo — função, segurança, fármacos e cuidador.'}
+  ]}
+]},
+
+/* ---------- 6. SUB ---------- */
+{ code:'SUB', emoji:'🍷', nome:'Uso de substâncias',
+  desc:'Álcool, opioides, abstinência e intervenção breve.',
+  badge:{emoji:'⚓', name:'Porto Seguro'},
+  intro:'Do rastreamento universal à emergência por overdose: sem estereótipos e sem julgamento.',
+  acts:[
+  {type:'anamnese', data:{
+    intro:'<span class="who">Seu Jorge, 55 anos</span>, veio "medir a pressão", mas a esposa comentou na recepção que ele "anda bebendo demais". Ele evita o assunto.',
+    max:4,
+    itens:[
+     {t:'Perguntar com naturalidade, como a todos os pacientes: quantidade, frequência e há quanto tempo bebe.', ok:true,
+      resp:'"Uma garrafa de cachaça por dia, faz uns 20 anos. Nunca contei isso a médico."',
+      note:'Rastreamento universal, sem julgamento: é o que abre a porta para a informação real.'},
+     {t:'Perguntar o que acontece quando fica algumas horas sem beber (tremores, suor, ansiedade).', ok:true,
+      resp:'"Se passo a manhã sem beber, a mão treme e suo frio. Só melhora com o primeiro gole."',
+      note:'Sinais de abstinência indicam DEPENDÊNCIA — muda o protocolo (desintoxicação planejada, risco de convulsões).'},
+     {t:'Avaliar a saúde física: alimentação, sinais de hepatopatia, e explicar a importância da tiamina.', ok:true,
+      resp:'Come mal, "esquece de almoçar". Fígado doloroso à palpação.',
+      note:'Consumidores crônicos de grande quantidade correm risco de encefalopatia de Wernicke: tiamina 100 mg/dia.'},
+     {t:'Explorar a motivação: o que ele acha do próprio consumo e se já pensou em mudar.', ok:true,
+      resp:'"Já tentei parar sozinho, aguentei três dias. Queria conseguir, pelos netos."',
+      note:'Entrevista motivacional: a mudança nasce da motivação da própria pessoa, não do sermão.'},
+     {t:'Mostrar os riscos com firmeza: "o senhor vai destruir seu fígado e sua família se continuar assim".', ok:false,
+      resp:'Jorge se fecha: "Vim só medir a pressão, doutor."',
+      note:'Confronto e julgamento moral rompem o vínculo — o oposto da entrevista motivacional e do PCE.'},
+     {t:'Combinar com a esposa um controle rígido: ela avisa a unidade se ele beber de novo.', ok:false,
+      resp:'Jorge sente-se vigiado e traído; a esposa vira fiscal, não apoio.',
+      note:'Transformar a família em vigilância viola o sigilo e mina o apoio social — que deve ser rede, não patrulha.'}
+    ],
+    licao:'Anamnese SUB: rastreamento sem julgamento, sinais de abstinência (dependência), saúde física/tiamina e motivação.'}},
+  {type:'cenario', data:[
+   {ctx:'<span class="who">Emergência:</span> jovem trazido inconsciente, respiração de 6 irpm e <b>pupilas puntiformes</b>; marcas de injeção no braço.',
+    q:'Qual é o quadro?',
+    opts:[
+     {t:'Overdose de opioide — emergência: suporte de vias aéreas e respiração e manejo imediato do quadro.', ok:true,
+      fb:'Tríade da overdose de opioide no SUB: ausência de resposta + baixa frequência respiratória + pupilas puntiformes. É caso de emergência do módulo.'},
+     {t:'Intoxicação alcoólica grave — posição lateral de segurança e observação até o efeito passar.', ok:false,
+      fb:'A posição lateral é boa prática, mas "observar até passar" mata aqui: FR de 6 irpm + miose puntiforme = opioide, com falência respiratória iminente. Suporte ativo imediato.'},
+     {t:'Coma hipoglicêmico — administrar glicose IV antes de qualquer outra medida.', ok:false,
+      fb:'Checar glicemia é razoável em coma, mas as pupilas puntiformes + depressão respiratória + marcas de injeção apontam opioide: a prioridade é via aérea e respiração.'}
+    ],
+    licao:'Overdose de opioide: inconsciência + FR baixa + pupilas puntiformes = emergência respiratória.'},
+   {ctx:'<span class="who">Seu Jorge</span> (dependente de álcool, com sinais de abstinência) decidiu parar de beber. Pergunta se pode "cortar de vez amanhã, em casa".',
+    q:'O que orientar?',
+    opts:[
+     {t:'A interrupção súbita pode causar convulsões e delirium (pode ser fatal): planejar a desintoxicação — com internação se necessário — e prescrever tiamina 100 mg/dia.', ok:true,
+      fb:'Protocolo de abstinência de álcool: ambiente calmo, hidratação e eletrólitos, tiamina (prevenir Wernicke), e medicação da abstinência conforme necessidade. Apoie a decisão, com segurança.'},
+     {t:'Apoiar o plano dele: reduzir à metade nesta semana e zerar na próxima, com chás e repouso em casa.', ok:false,
+      fb:'Valorizar a motivação é certo, mas em dependência grave a retirada exige plano estruturado: risco real de convulsões e delirium. "Chá e repouso" não cobrem uma abstinência potencialmente fatal.'},
+     {t:'Prescrever diazepam para ele mesmo manejar os sintomas de abstinência em casa, conforme sentir necessidade.', ok:false,
+      fb:'Benzodiazepínico tem papel na abstinência — mas com dispensação SUPERVISIONADA: entregar o frasco a um dependente, sem controle, arrisca nova dependência e overdose com álcool.'}
+    ],
+    licao:'Abstinência de álcool pode ser fatal: desintoxicação planejada e supervisionada + tiamina (prevenir Wernicke).'},
+   {ctx:'<span class="who">Renato, 31 anos</span>, dependente de opioides, já tentou "parar seco" quatro vezes e recaiu em todas.',
+    q:'O que o manual recomenda como estratégia mais efetiva?',
+    opts:[
+     {t:'Tratamento de manutenção com agonistas opioides (terapia de substituição), geralmente mais efetivo que a desintoxicação isolada.', ok:true,
+      fb:'Protocolo de dependência de opioides: avaliar o grau de dependência e oferecer manutenção com agonistas ou encaminhar para esse tratamento.'},
+     {t:'Nova desintoxicação, agora com apoio psicoterápico intensivo — substituir um opioide por outro só perpetua a dependência.', ok:false,
+      fb:'É o argumento mais comum contra a substituição — e o manual o contraria: a manutenção com agonistas é geralmente MAIS efetiva, e cada desintoxicação isolada aumenta o risco de overdose fatal na recaída (tolerância perdida).'},
+     {t:'Internação prolongada em comunidade terapêutica abstinente, longe dos gatilhos do território.', ok:false,
+      fb:'Afastar dos gatilhos parece lógico, mas a evidência do manual aponta a manutenção com agonistas como estratégia principal; serviços residenciais são complemento considerável, não substituto.'}
+    ],
+    licao:'Dependência de opioides: manutenção com agonistas > desintoxicação isolada.'},
+   {ctx:'<span class="who">Paula, 28 anos</span>, faz uso prejudicial de álcool nos fins de semana, sem dependência.',
+    q:'Intervenção indicada na atenção primária?',
+    opts:[
+     {t:'Intervenção breve com entrevista motivacional: examinar o padrão de uso, motivar a mudança e explorar estratégias de redução de uso e de danos.', ok:true,
+      fb:'Núcleo do manejo do uso prejudicial no SUB, somado à abordagem de necessidades de alimentação, moradia e emprego, e ao seguimento.'},
+     {t:'Encaminhar a grupo de dependentes e iniciar naltrexona como prevenção de progressão para a dependência.', ok:false,
+      fb:'Tratamento desproporcional: farmacoterapia antirrecaída é para DEPENDÊNCIA. No uso prejudicial, a resposta é a intervenção breve — leve, na própria unidade.'},
+     {t:'Registrar a informação e reavaliar em 6 meses: uso de fim de semana ainda não justifica intervenção.', ok:false,
+      fb:'Uso prejudicial JÁ causa dano — a intervenção breve existe exatamente para agir agora, antes da dependência, quando a mudança é mais fácil.'}
+    ],
+    licao:'Uso prejudicial: intervenção breve + entrevista motivacional + redução de danos, já na atenção primária.'},
+   {ctx:'<span class="who">Dona Célia, 62 anos</span>, usa diazepam todas as noites há 5 anos ("para dormir") e quer parar.',
+    q:'Como conduzir?',
+    opts:[
+     {t:'Redução GRADUAL da dose, com dispensação supervisionada — a interrupção súbita de benzodiazepínico pode causar convulsões e delirium.', ok:true,
+      fb:'SUB — dependência de benzodiazepínicos: retirada gradual com dispensação supervisionada, ou redução mais rápida em regime de internação.'},
+     {t:'Suspender de vez: benzodiazepínico receitado não causa a abstinência das "drogas de rua".', ok:false,
+      fb:'A farmacologia não distingue receita de rótulo: a abstinência de benzodiazepínico é das mais perigosas — convulsões e delirium.'},
+     {t:'Trocar por outro benzodiazepínico "mais fraco" e manter indefinidamente.', ok:false,
+      fb:'Troca sem plano perpetua a dependência. O objetivo é o desmame progressivo, com apoio não farmacológico para a insônia.'}
+    ],
+    licao:'Benzodiazepínico crônico: retirada gradual e supervisionada — nunca abrupta.'},
+   {ctx:'<span class="who">Seu Nelson, 60 anos</span>, fuma 30 cigarros por dia. Veio tratar o joelho e não mencionou o cigarro.',
+    q:'Abordar o tabagismo agora?',
+    opts:[
+     {t:'Sim: toda oportunidade de contato serve para aconselhar a cessação — intervenção breve, avaliação da motivação e oferta de apoio.', ok:true,
+      fb:'SUB/PCE: questionar TODOS os pacientes sobre tabaco e álcool; incentivar o abandono é intervenção de enorme impacto na saúde física.'},
+     {t:'Não: ele veio pelo joelho — misturar assuntos dispersa a consulta e desgasta o vínculo.', ok:false,
+      fb:'A consulta de assunto único desperdiça o encontro: o aconselhamento breve funciona justamente por ser oportunista e repetido.'},
+     {t:'Apenas sugerir a troca por cigarros com menos nicotina.', ok:false,
+      fb:'Não há cigarro seguro: a meta é a cessação, com apoio estruturado — não a maquiagem do risco.'}
+    ],
+    licao:'Tabaco: aconselhar a cessação em toda oportunidade de contato.'},
+   {ctx:'<span class="who">Gestante de 16 semanas</span> conta que toma "uma cervejinha aos fins de semana".',
+    q:'Qual orientação?',
+    opts:[
+     {t:'Orientar, sem julgamento, a abstinência total de álcool na gestação — não há dose segura para o feto — e oferecer apoio para sustentá-la.', ok:true,
+      fb:'SUB — populações especiais: aconselhar gestantes e lactantes a evitar totalmente álcool e substâncias, acolhendo sem culpabilizar.'},
+     {t:'Tranquilizar: consumo leve e esporádico não atinge o feto depois do 1º trimestre.', ok:false,
+      fb:'Não existe limiar seguro conhecido — os danos fetais do álcool ocorrem em exposições variadas. A recomendação é zero.'},
+     {t:'Evitar o tema para não gerar culpa e estresse, que também fazem mal à gravidez.', ok:false,
+      fb:'Silêncio não é acolhimento: é possível orientar com clareza E sem culpar — o custo da omissão é do bebê.'}
+    ],
+    licao:'Gestação: abstinência total de álcool e substâncias, com orientação acolhedora.'},
+   {ctx:'<span class="who">Emergência:</span> jovem agitado e agressivo, pupilas dilatadas, taquicardia, pressão alta e fala acelerada com paranoia após usar cocaína.',
+    q:'Como manejar?',
+    opts:[
+     {t:'Intoxicação por estimulante: ambiente calmo e seguro, monitorar sinais vitais e risco cardiovascular, considerar benzodiazepínico para agitação grave.', ok:true,
+      fb:'SUB — emergências: a intoxicação por estimulante cursa com midríase, hipertensão, agitação e paranoia; o manejo é suporte, contenção do risco e observação.'},
+     {t:'Liberar para casa: o efeito da cocaína passa em poucas horas, sem maiores riscos.', ok:false,
+      fb:'Estimulantes matam por arritmia, infarto e AVC na intoxicação aguda — a observação com monitoramento não é opcional.'},
+     {t:'Aplicar antipsicótico de depósito para controlar a paranoia.', ok:false,
+      fb:'A paranoia da intoxicação é transitória; um depósito duraria semanas num corpo já sob estresse cardiovascular. Se preciso, benzodiazepínico de curta ação.'}
+    ],
+    licao:'Intoxicação por estimulante: ambiente calmo, monitoramento cardiovascular, benzodiazepínico se agitação grave.'},
+   {ctx:'<span class="who">Usuário de drogas injetáveis</span> afirma que não pretende parar agora, "de jeito nenhum".',
+    q:'O que o serviço ainda pode oferecer?',
+    opts:[
+     {t:'Redução de danos: orientação sobre material estéril, testagem de HIV e hepatites, vacinação e porta aberta — o cuidado não é condicionado à abstinência.', ok:true,
+      fb:'SUB — as estratégias de redução de danos acompanham as de redução/abandono do uso: proteger a vida AGORA mantém o vínculo para a mudança DEPOIS.'},
+     {t:'Explicar que o serviço poderá ajudá-lo quando ele decidir parar de verdade.', ok:false,
+      fb:'Condicionar o cuidado à abstinência expulsa quem mais corre risco — e destrói a única ponte para a mudança futura.'},
+     {t:'Acionar a autoridade policial, já que se trata de uso de droga ilícita.', ok:false,
+      fb:'Quebra de sigilo e de função: o serviço de saúde cuida — criminalizar o paciente destrói o acesso dele (e de outros) ao cuidado.'}
+    ],
+    licao:'Redução de danos: material estéril, testagem, vacinas e vínculo — sem exigir abstinência prévia.'},
+   {ctx:'<span class="who">Paciente novo</span> pede renovação de analgésico opioide "para dor nas costas" — a terceira vez no mês, em unidades diferentes.',
+    q:'Como interpretar?',
+    opts:[
+     {t:'Sinal de alerta para transtorno por uso de substância: investigar com respeito o padrão de uso antes de renovar — pedidos recorrentes de psicoativos são manifestação descrita no módulo.', ok:true,
+      fb:'SUB: pessoas com transtornos por uso podem não relatar o problema; investigue pedidos recorrentes de medicamentos psicoativos, lesões e infecções associadas.'},
+     {t:'Renovar sem questionar: duvidar da dor do paciente quebraria o vínculo terapêutico.', ok:false,
+      fb:'A renovação automática alimenta a dependência com o carimbo do serviço. Investigar com respeito não é acusar.'},
+     {t:'Negar o atendimento e registrar o paciente como "buscador de droga".', ok:false,
+      fb:'O rótulo expulsa a pessoa exatamente do lugar que poderia tratá-la — avaliação respeitosa, não expulsão.'}
+    ],
+    licao:'Pedidos recorrentes de psicoativos: investigar transtorno por uso — sem renovação automática, sem expulsão.'},
+   {ctx:'Plantão de triagem: quatro pacientes chegam com quadros de intoxicação diferentes e nenhum informa o que usou.',
+    q:'Qual associação substância → quadro está correta?',
+    opts:[
+     {t:'Opioides: pupilas puntiformes e sonolência; estimulantes: midríase, agitação e taquicardia; álcool/benzodiazepínicos: fala arrastada e desinibição; cânabis: conjuntivas vermelhas e relaxamento.', ok:true,
+      fb:'Resumo do Quadro 1 do SUB — os efeitos agudos característicos orientam a triagem quando o paciente não pode ou não quer informar a substância.'},
+     {t:'Opioides: midríase e agitação; estimulantes: pupilas puntiformes e sedação.', ok:false,
+      fb:'Invertido — e a inversão custa vidas: miose + depressão respiratória (opioide) pede suporte ventilatório imediato; midríase + hipertensão (estimulante) pede monitoramento cardiovascular.'},
+     {t:'Todas as substâncias produzem o mesmo quadro, variando apenas a intensidade.', ok:false,
+      fb:'Cada classe tem assinatura própria (pupilas, sinais vitais, comportamento) — é o que permite agir sem esperar exame toxicológico.'}
+    ],
+    licao:'Quadro 1 SUB: opioide = miose + sedação; estimulante = midríase + agitação; álcool/benzo = fala arrastada; cânabis = conjuntivas vermelhas.'},
+   {ctx:'<span class="who">Seu Jorge</span> completou a desintoxicação do álcool com sucesso e teme recair.',
+    q:'Além do apoio psicossocial, o que o módulo oferece?',
+    opts:[
+     {t:'Considerar farmacoterapia de prevenção de recaída: acamprosato, naltrexona ou dissulfiram (baclofeno apenas com especialista) — e até a redução de quantidade e frequência já é resposta válida.', ok:true,
+      fb:'SUB — dependência de álcool: medicamentos de prevenção de recaída somados a grupos de ajuda mútua e tratamento psicossocial estruturado (TCC, reforço motivacional, terapia familiar).'},
+     {t:'Nada farmacológico: remédio para não beber substituiria uma dependência por outra.', ok:false,
+      fb:'Acamprosato, naltrexona e dissulfiram não causam dependência — são ferramentas legítimas do módulo contra a recaída.'},
+     {t:'Benzodiazepínico de manutenção para controlar a fissura.', ok:false,
+      fb:'O benzodiazepínico serviu à abstinência aguda; como manutenção, cria exatamente a nova dependência que se temia.'}
+    ],
+    licao:'Prevenção de recaída no álcool: acamprosato, naltrexona ou dissulfiram + apoio psicossocial e grupos.'},
+   {ctx:'<span class="who">Renato</span> iniciou o tratamento e está em abstinência de opioides: midríase, cólicas, dores musculares, piloereção, lacrimejamento e ansiedade.',
+    q:'Como o módulo caracteriza e maneja esse quadro?',
+    opts:[
+     {t:'Abstinência de opioide é intensamente desconfortável, mas raramente fatal (ao contrário da de álcool e benzodiazepínicos): manejo sintomático planejado e, preferencialmente, transição para a manutenção com agonistas.', ok:true,
+      fb:'SUB — abstinência de opioides: sinais como midríase, cólicas e piloereção; a desintoxicação planejada conecta-se à manutenção com agonistas, mais efetiva que "parar seco".'},
+     {t:'É a abstinência mais letal de todas: internação em UTI obrigatória.', ok:false,
+      fb:'As potencialmente fatais são as de álcool e benzodiazepínicos (convulsões, delirium). A de opioides é violenta no sintoma e rara no óbito — o perigo real é a overdose na recaída, pela tolerância perdida.'},
+     {t:'Tratar com doses decrescentes da própria droga de rua, compradas pelo paciente.', ok:false,
+      fb:'A substituição usa agonistas controlados em programa estruturado — não a droga de rua em esquema informal.'}
+    ],
+    licao:'Abstinência de opioides: sintomática e raramente fatal; manejo planejado + manutenção com agonistas.'}
+  ]}
+]},
+
+/* ---------- 7. SUI ---------- */
+{ code:'SUI', emoji:'🕊️', nome:'Autoagressão / suicídio',
+  desc:'Avaliar risco, agir no risco iminente e acompanhar.',
+  badge:{emoji:'🕊️', name:'Sentinela da Vida'},
+  intro:'O módulo transversal: toda condição MNS exige avaliar risco de autoagressão. Perguntar salva vidas.',
+  acts:[
+  {type:'cenario', data:[
+   {ctx:'Um colega hesita: "Se eu perguntar sobre suicídio, não vou colocar a ideia na cabeça do paciente?"',
+    q:'O que responde o MI-mhGAP?',
+    opts:[
+     {t:'Perguntar NÃO induz o ato — e é obrigatório avaliar autoagressão em qualquer condição MNS prioritária, dor crônica ou sofrimento emocional agudo.', ok:true,
+      fb:'O SUI manda avaliar pensamentos, planos e atos, atuais e passados, sempre que houver desesperança extrema, condição MNS, dor crônica ou sofrimento intenso.'},
+     {t:'Perguntar é seguro, mas apenas quando o paciente demonstra abertura — forçar o tema em quem está frágil pode desestabilizar.', ok:false,
+      fb:'Meia-verdade perigosa: quem está em risco raramente "demonstra abertura". A investigação deve ser ativa e sensível — esperar o sinal ideal é como não perguntar.'},
+     {t:'O risco de induzir existe em adolescentes; nos adultos, pode-se perguntar livremente.', ok:false,
+      fb:'Não há evidência de indução em NENHUMA idade — e adolescentes são justamente um grupo em que a avaliação ativa é mais necessária.'}
+    ],
+    licao:'Perguntar sobre suicídio não induz o ato em nenhuma idade; a avaliação ativa é obrigatória.'},
+   {ctx:'<span class="who">Emergência:</span> mulher trazida após ingerir veneno agrícola; sonolenta, com sinais de intoxicação.',
+    q:'Primeira prioridade do Protocolo 1?',
+    opts:[
+     {t:'Tratar clinicamente o ato de autoagressão grave (intoxicação) em ambiente seguro e de apoio, SEM deixá-la sozinha; avaliar o risco quando estiver clinicamente estável.', ok:true,
+      fb:'Ato grave do ponto de vista médico: o manejo clínico vem primeiro; a avaliação do risco continua após a estabilização.'},
+     {t:'Estabilizar clinicamente e, resolvida a intoxicação, dar alta com encaminhamento ambulatorial para psicologia.', ok:false,
+      fb:'A primeira metade está certa — o erro é a alta: após a estabilização, a avaliação de risco iminente acontece ANTES de qualquer saída, com supervisão contínua até lá.'},
+     {t:'Acionar primeiro a avaliação psiquiátrica: sem entender a motivação, o tratamento clínico pode ser recusado de novo.', ok:false,
+      fb:'A intoxicação mata em horas; a motivação espera. Sequência do módulo: estabilizar o corpo → então avaliar o risco → planejar o cuidado.'}
+    ],
+    licao:'Ato grave: estabilizar clinicamente primeiro, em ambiente seguro, sem deixar a pessoa sozinha — e avaliar o risco antes de qualquer alta.'},
+   {ctx:'<span class="who">Estável, ela revela:</span> pensa em se matar "ainda esta semana" e tem um plano definido.',
+    q:'Conduta para o RISCO IMINENTE (Protocolo 2)?',
+    opts:[
+     {t:'Eliminar os meios de autoagressão, criar ambiente seguro e tranquilo, não deixar sozinha, ativar apoio psicossocial e consultar especialista.', ok:true,
+      fb:'Pensamentos ou plano ATUAIS = risco iminente. Segurança imediata + rede de apoio + acompanhamento próximo.'},
+     {t:'Firmar um "contrato de não suicídio" por escrito e liberar com retorno em 48 horas, envolvendo a família.', ok:false,
+      fb:'Contratos de não suicídio não têm eficácia demonstrada e criam falsa segurança. Com plano definido, a resposta é supervisão contínua e remoção de meios — não um papel assinado.'},
+     {t:'Garantir sigilo absoluto sobre o plano, para preservar o vínculo, e intensificar os retornos.', ok:false,
+      fb:'Dilema real: mas na iminência de risco de vida, ativar cuidadores e rede de apoio faz parte do protocolo — proteger a vida precede o sigilo.'}
+    ],
+    licao:'Risco iminente: remover meios, ambiente seguro, supervisão contínua, ativar apoio e especialista.'},
+   {ctx:'<span class="who">Outro paciente</span> teve pensamentos de autoagressão no último mês, mas hoje não tem plano nem agitação.',
+    q:'E quando o risco existe, mas não é iminente (Protocolo 3)?',
+    opts:[
+     {t:'Oferecer e ativar apoio psicossocial, consultar especialista em saúde mental se disponível e manter contato e seguimento periódicos.', ok:true,
+      fb:'História recente sem plano atual = risco não iminente, mas persistente: a resposta é vínculo, apoio e seguimento regular.'},
+     {t:'Encaminhar ao CAPS e considerar o caso transferido — o serviço especializado assume o seguimento.', ok:false,
+      fb:'Encaminhar não é transferir: a atenção primária MANTÉM o contato e o seguimento periódicos. O abandono silencioso entre serviços é onde os casos se perdem.'},
+     {t:'Iniciar antidepressivo imediatamente: tratar a causa provável é a melhor prevenção do suicídio.', ok:false,
+      fb:'Tratar a condição de base importa — mas exige avaliação diagnóstica primeiro, e antidepressivos podem AUMENTAR a ideação em jovens no início. Se prescrever, suprimento limitado e vigiado.'}
+    ],
+    licao:'Risco não iminente: apoio psicossocial, especialista se disponível e seguimento periódico mantido pela atenção primária.'},
+   {ctx:'Na reunião de equipe, alguém afirma: "Quem fala em se matar não faz — quem faz, não avisa."',
+    q:'O que diz a evidência refletida no módulo?',
+    opts:[
+     {t:'É mito: falar em suicídio é sinal de risco e pede avaliação — grande parte das pessoas que morrem comunicou a intenção antes.', ok:true,
+      fb:'SUI: pensamentos e falas sobre suicídio integram os critérios de avaliação de risco. Toda menção merece investigação séria e acolhedora.'},
+     {t:'Tem fundamento: a comunicação do desejo costuma ser apelo por atenção, não risco real.', ok:false,
+      fb:'O "apelo por atenção" É um pedido de ajuda — e ignorá-lo é a resposta com a maior letalidade possível.'},
+     {t:'Só há risco real quando existe tentativa prévia documentada.', ok:false,
+      fb:'Tentativa prévia aumenta o risco, mas pensamentos e planos ATUAIS já configuram risco iminente por si sós.'}
+    ],
+    licao:'Falar em suicídio É sinal de risco: sempre avaliar — nunca tratar como "só atenção".'},
+   {ctx:'<span class="who">Paciente rural com risco de suicídio identificado.</span> Em casa há agrotóxicos no galpão e uma espingarda.',
+    q:'Além do acompanhamento, o que fazer?',
+    opts:[
+     {t:'Orientar a família a restringir o acesso aos meios: trancar ou remover agrotóxicos e arma — a restrição de meios é das medidas mais efetivas de prevenção.', ok:true,
+      fb:'SUI — Protocolo 2: eliminar os meios de autoagressão é ação central. A crise suicida costuma ser breve; sem o meio à mão, muitas mortes não ocorrem.'},
+     {t:'Considerar suficiente o compromisso verbal do paciente de não mexer nesses itens.', ok:false,
+      fb:'Na crise aguda o compromisso verbal desaba — a barreira física é o que dá tempo para a ambivalência trabalhar a favor da vida.'},
+     {t:'Não interferir na organização da casa: é invasivo e sinaliza desconfiança.', ok:false,
+      fb:'Envolver a família na segurança doméstica é proteção, não invasão — e o manual manda fazê-lo explicitamente.'}
+    ],
+    licao:'Restrição de meios (agrotóxicos, armas, medicamentos): medida-chave de prevenção do suicídio.'},
+   {ctx:'Passada a crise de risco iminente, a paciente está estável e voltará para casa com a família orientada.',
+    q:'Como fica o seguimento?',
+    opts:[
+     {t:'Manter contato periódico e mais frequente no início, com a rede de apoio ativada, reavaliações regulares do risco e porta aberta para retorno a qualquer momento.', ok:true,
+      fb:'SUI: contato e seguimento periódicos são parte do protocolo — o período após a crise é o de maior risco.'},
+     {t:'Agendar reavaliação semestral, já que o risco iminente foi superado.', ok:false,
+      fb:'O risco flutua e o pós-crise é o período mais perigoso: seis meses sem contato é abandono.'},
+     {t:'Encerrar o acompanhamento se ela negar ideação por duas consultas seguidas.', ok:false,
+      fb:'Negar ideação em consulta não zera o risco — o vínculo contínuo é o fator protetor.'}
+    ],
+    licao:'Pós-crise: contato frequente no início e seguimento regular — é o período de maior risco.'},
+   {ctx:'<span class="who">Menina de 14 anos</span> com cortes superficiais recentes nos antebraços, escondidos pela blusa.',
+    q:'Como abordar?',
+    opts:[
+     {t:'Avaliar com sensibilidade e em particular: perguntar sobre a autoagressão, pensamentos e plano, sem julgamento — e envolver os cuidadores de forma cuidadosa, conforme o risco.', ok:true,
+      fb:'SUI/MCO: autoagressão em adolescente exige avaliação direta e acolhedora do risco; a proteção pode exigir envolver adultos, com manejo delicado do sigilo.'},
+     {t:'Chamar os pais à sala e mostrar os cortes, para que levem a sério e vigiem em casa.', ok:false,
+      fb:'A exposição humilha e destrói a única ponte de confiança — o envolvimento da família se constrói COM a adolescente, não contra ela.'},
+     {t:'Tranquilizar-se: cortes superficiais são comuns entre adolescentes e não têm relação com suicídio.', ok:false,
+      fb:'Autoagressão prévia é dos maiores preditores de suicídio futuro — banalizar é o erro mais caro.'}
+    ],
+    licao:'Autoagressão em adolescente: avaliar risco em particular, sem julgamento; envolver a família com cuidado.'},
+   {ctx:'<span class="who">Seu Ramiro, 70 anos</span>, dor crônica intensa por artrose, diz cansado: "Não aguento mais viver assim."',
+    q:'O que a frase exige?',
+    opts:[
+     {t:'Avaliar o risco de suicídio (dor crônica é fator listado no módulo) E otimizar o controle da dor — as duas coisas, na mesma consulta.', ok:true,
+      fb:'SUI 1: a dor crônica está entre as condições que exigem avaliação de autoagressão. Tratar a dor também é prevenção do suicídio.'},
+     {t:'Focar no ajuste analgésico: com a dor controlada, o desânimo se resolve por consequência.', ok:false,
+      fb:'Talvez — mas "talvez" não é avaliação de risco. A frase dele é uma porta aberta: pergunte diretamente sobre ideação.'},
+     {t:'Interpretar como desabafo normal de idoso com doença crônica.', ok:false,
+      fb:'A normalização do sofrimento do idoso é um dos motivos de o suicídio nessa faixa etária ser subdetectado — sempre avaliar.'}
+    ],
+    licao:'Dor crônica + desesperança: avaliar risco de suicídio e tratar a dor — juntos.'},
+   {ctx:'Paciente com depressão e risco de suicídio (não iminente) tem indicação de antidepressivo.',
+    q:'Como prescrever com segurança?',
+    opts:[
+     {t:'Preferir ISRS (a overdose de tricíclico pode ser fatal), entregar suprimento limitado — p. ex., para uma semana — e pedir aos cuidadores que guardem e vigiem os medicamentos.', ok:true,
+      fb:'DEP/SUI: em adultos com pensamentos ou planos de suicídio, o ISRS é a primeira opção e a dispensação é fracionada e supervisionada.'},
+     {t:'Prescrever amitriptilina com receita mensal cheia, pelo menor custo para o paciente.', ok:false,
+      fb:'Entregar a uma pessoa em risco um frasco cheio de tricíclico é entregar o meio: a overdose de amitriptilina mata.'},
+     {t:'Não prescrever nada: medicar alguém com risco de suicídio é sempre contraindicado.', ok:false,
+      fb:'Não tratar a depressão MANTÉM o principal fator de risco. A resposta é prescrever com segurança, não se abster.'}
+    ],
+    licao:'Risco de suicídio: ISRS, suprimento limitado e medicamentos guardados por cuidadores.'}
+  ]}
+]},
+
+/* ---------- 8. OUT ---------- */
+{ code:'OUT', emoji:'🌤️', nome:'Outras queixas de saúde mental',
+  desc:'Sintomas sem explicação física, luto e estressores extremos.',
+  badge:{emoji:'🌈', name:'Escuta Sensível'},
+  intro:'Queixas que não fecham critério para os outros módulos — onde o maior risco é medicalizar demais.',
+  acts:[
+  {type:'cenario', data:[
+   {ctx:'<span class="who">Dona Irene, 49 anos</span>: dores pelo corpo e "nó no estômago" há meses. Todos os exames normais. Ela insiste: "quero mais exames, doutor".',
+    q:'Conduta do módulo OUT?',
+    opts:[
+     {t:'Reconhecer que os sintomas são reais (não imaginários), comunicar os resultados normais, evitar novos exames sem indicação clara e explorar a ligação entre estresse e sensações físicas.', ok:true,
+      fb:'OUT 2: exames desnecessários podem ser prejudiciais. Peça a explicação da própria pessoa para os sintomas — isso revela preocupações e fortalece o vínculo.'},
+     {t:'Solicitar uma última bateria direcionada: com tudo normal em mãos, ficará mais fácil tranquilizá-la em definitivo.', ok:false,
+      fb:'O "último exame" nunca é o último: alimenta o ciclo de preocupação. Se ainda assim pedir, reduza expectativas — mas o manual orienta evitar exames sem indicação clara.'},
+     {t:'Explicar que os exames descartaram doença e que os sintomas tendem a desaparecer sozinhos com o tempo.', ok:false,
+      fb:'Descartar doença não encerra o cuidado: os sintomas são reais e causam sofrimento. Sem abordar o estresse e as emoções ligadas ao corpo, ela voltará — ou procurará outro serviço.'}
+    ],
+    licao:'Sintomas sem explicação física: validar o sofrimento, evitar exames desnecessários, ligar estresse e corpo.'},
+   {ctx:'Dona Irene pergunta se não existe "um calmante ou antidepressivo" para o caso dela.',
+    q:'O que diz o OUT 2?',
+    opts:[
+     {t:'NÃO prescrever ansiolíticos ou antidepressivos (salvo orientação de especialista); reduzir estresse, ensinar técnicas de relaxamento e fortalecer apoios sociais.', ok:true,
+      fb:'Também estão proibidas as injeções de vitamina e outros tratamentos ineficazes. O caminho é psicossocial.'},
+     {t:'Prescrever um antidepressivo em dose baixa: mesmo sem depressão fechada, ISRS ajudam em sintomas somáticos.', ok:false,
+      fb:'Uso frequente na prática, mas o módulo é claro: sem indicação de especialista, nada de antidepressivos aqui — o tratamento é psicossocial.'},
+     {t:'Prescrever fitoterápico ou complexo vitamínico: inócuos, atendem a expectativa e fortalecem o vínculo.', ok:false,
+      fb:'O "placebo bem-intencionado" está vetado: injeções de vitamina e tratamentos ineficazes reforçam a medicalização e adiam a abordagem real do sofrimento.'}
+    ],
+    licao:'OUT: sem ansiolíticos/antidepressivos (salvo especialista); relaxamento, manejo do estresse e apoio social.'},
+   {ctx:'<span class="who">Seu Válter, 61 anos</span>, perdeu a esposa há 2 meses. Chora com frequência, sente saudade intensa, mas cuida da casa e vê os netos.',
+    q:'Como abordar?',
+    opts:[
+     {t:'Explicar que o luto é reação normal, sem maneira "certa" de vivê-lo; apoiar rituais culturalmente apropriados; sem medicação. Suspeitar de luto prolongado apenas se, após ~6 meses, houver grande prejuízo funcional com preocupação intensa pelo falecido.', ok:true,
+      fb:'OUT: na maioria dos casos o luto atenua com o tempo. O transtorno de luto prolongado (≥ 6 meses + prejuízo + dor intensa) exige especialista.'},
+     {t:'Iniciar antidepressivo em dose baixa preventivamente: viúvos idosos têm alto risco de evoluir para depressão.', ok:false,
+      fb:'O risco existe, mas não se medica luto normal preventivamente: com funcionamento preservado, a conduta é apoio — e o próprio módulo DEP manda não instituir manejo de depressão no luto recente.'},
+     {t:'Encaminhar desde já para psicoterapia de luto, prevenindo a cronificação.', ok:false,
+      fb:'Encaminhamento universal medicaliza uma reação normal. Apoio, escuta e rituais bastam para a maioria; especialista só na suspeita de luto prolongado (≥ 6 meses + prejuízo).'}
+    ],
+    licao:'Luto normal: apoio e rituais, sem fármacos nem encaminhamento automático; luto prolongado (≥ 6 meses + prejuízo) → especialista.'},
+   {ctx:'<span class="who">Camila, 24 anos</span>, sofreu um assalto violento há 3 semanas. Está tensa e evita sair, mas não quer falar dos detalhes.',
+    q:'Conduta correta diante de exposição a estressor extremo?',
+    opts:[
+     {t:'NÃO pressioná-la a falar do acontecimento; atender necessidades sociais e de proteção; incentivar a retomada gradual da rotina; suspeitar de TEPT apenas se, após ≥ 1 mês, houver revivescências, pesadelos e prejuízo importante.', ok:true,
+      fb:'Protocolo 2 do OUT: escuta sem pressão, necessidades básicas e proteção primeiro. TEPT suspeito → especialista para avaliação e manejo.'},
+     {t:'Propor uma sessão de reconstituição detalhada do evento ("debriefing"): elaborar cedo previne o trauma de se fixar.', ok:false,
+      fb:'O debriefing precoce é prática difundida — e contraindicada: o manual manda NÃO pressionar a pessoa a falar do acontecimento. Reações variam e mudam com o tempo.'},
+     {t:'Como já há evitação e hipervigilância, fechar TEPT e iniciar o manejo específico sem esperar.', ok:false,
+      fb:'Reações nas primeiras semanas são frequentes e esperadas. TEPT exige ≥ 1 mês de sintomas com prejuízo — e a suspeita vai ao especialista, não ao fármaco imediato.'}
+    ],
+    licao:'Estressor extremo: não pressionar a falar; apoio prático; TEPT só após ≥ 1 mês de sintomas → especialista.'},
+   {ctx:'Dona Irene aceita tentar o caminho não medicamentoso e pergunta por onde começar.',
+    q:'O que ensinar na própria consulta?',
+    opts:[
+     {t:'Técnica de relaxamento com respiração lenta e treino diário, somada ao manejo dos estressores e ao fortalecimento dos apoios sociais.', ok:true,
+      fb:'OUT 2: ensinar o controle do estresse, como as técnicas de relaxamento descritas no módulo, é intervenção de primeira linha para queixas ligadas ao estresse.'},
+     {t:'Nada na consulta: técnicas de relaxamento exigem psicólogo especializado.', ok:false,
+      fb:'O manual foi desenhado para não especialistas: a técnica pode e deve ser ensinada na própria atenção primária.'},
+     {t:'Indicar um aplicativo pago de meditação como pré-requisito do tratamento.', ok:false,
+      fb:'Barreira desnecessária: a respiração lenta não custa nada e começa hoje, guiada por você.'}
+    ],
+    licao:'Ensinar relaxamento (respiração lenta) na própria consulta: primeira linha no OUT.'},
+   {ctx:'<span class="who">Seu Anísio, 66 anos</span>: desde que se aposentou, abandonou o dominó na praça e a horta comunitária. Queixas vagas, exames normais.',
+    q:'Qual intervenção o OUT sugere?',
+    opts:[
+     {t:'Reativar as redes e atividades sociais prévias — identificar o que ele fazia e apoiar a retomada gradual (dominó, horta, atividades comunitárias).', ok:true,
+      fb:'OUT/PCE: reativar atividades sociais anteriores propicia apoio psicossocial direto e indireto — intervenção potente e sem receita.'},
+     {t:'Prescrever antidepressivo profilático para a "depressão da aposentadoria".', ok:false,
+      fb:'Não há depressão diagnosticada — medicalizar a transição de vida ignora a causa (perda de papel e de rede) e o tratamento certo (reconexão).'},
+     {t:'Recomendar repouso: aposentadoria é para descansar, e as queixas passam.', ok:false,
+      fb:'O "descanso" involuntário É o problema: sem atividade e vínculo, as queixas do isolamento só crescem.'}
+    ],
+    licao:'Queixas vagas + isolamento: reativar redes e atividades sociais prévias.'},
+   {ctx:'<span class="who">Família desabrigada por enchente</span> chega à unidade uma semana após perder a casa. Todos abalados.',
+    q:'Por onde começa o cuidado?',
+    opts:[
+     {t:'Pelas necessidades básicas e de proteção: abrigo, alimentação, segurança, conexão com serviços e com a rede familiar — junto com escuta sem pressão.', ok:true,
+      fb:'OUT — estressores extremos: atender necessidades sociais, proteger de danos adicionais e conectar a apoios vem antes de qualquer intervenção formal.'},
+     {t:'Por sessões de reconstituição do ocorrido, enquanto a memória está fresca.', ok:false,
+      fb:'Debriefing precoce é contraindicado — não pressione ninguém a falar do acontecimento.'},
+     {t:'Por benzodiazepínicos para toda a família dormir melhor no abrigo.', ok:false,
+      fb:'Sedar a resposta normal ao desastre cria dependência e atrapalha a adaptação — o módulo veta ansiolíticos aqui.'}
+    ],
+    licao:'Estressor extremo: necessidades básicas, proteção e conexão social primeiro.'},
+   {ctx:'<span class="who">Executivo, 45 anos</span>, sob estresse no trabalho: "Só preciso de um comprimido para dormir, doutor."',
+    q:'Resposta adequada?',
+    opts:[
+     {t:'Não prescrever o ansiolítico: abordar o estresse, ensinar higiene do sono e relaxamento — e explicar por que o comprimido pioraria o problema em poucas semanas.', ok:true,
+      fb:'OUT: sem ansiolíticos, salvo orientação especializada. Benzodiazepínico para insônia por estresse gera tolerância, dependência — e a mesma insônia depois.'},
+     {t:'Prescrever por 90 dias, com o combinado de retirada futura.', ok:false,
+      fb:'"Uso temporário" de 90 dias é dependência com hora marcada — a tolerância se instala em semanas.'},
+     {t:'Trocar por anti-histamínico sedativo contínuo, que não causa dependência.', ok:false,
+      fb:'Substituir o mecanismo não resolve a causa — e a sedação anti-histamínica crônica tem custos próprios (tolerância, sonolência residual, quedas).'}
+    ],
+    licao:'Insônia por estresse: higiene do sono e relaxamento — sem benzodiazepínico.'},
+   {ctx:'Você pergunta a Dona Irene: "Na sua opinião, o que está causando esses sintomas?" — Ela hesita, surpresa com a pergunta.',
+    q:'Por que essa pergunta está no manual?',
+    opts:[
+     {t:'Porque a explicação da própria pessoa revela preocupações ocultas, ajuda a criar uma relação de confiança e aumenta a adesão ao tratamento.', ok:true,
+      fb:'OUT 2: pedir a explicação da pessoa para a causa dos sintomas é passo formal do protocolo — abre a porta das preocupações reais (medo de doença grave, culpa, conflito).'},
+     {t:'Não está: cabe ao profissional explicar, não ao paciente teorizar sobre a própria doença.', ok:false,
+      fb:'Está, literalmente: a pergunta é ferramenta diagnóstica e terapêutica ao mesmo tempo.'},
+     {t:'Serve para corrigir de imediato as crenças erradas que ela verbalizar.', ok:false,
+      fb:'Ouvir para corrigir no ato mata a função da pergunta — primeiro compreender a lógica dela, depois construir a explicação em conjunto.'}
+    ],
+    licao:'Perguntar a explicação da própria pessoa: revela preocupações e fortalece a adesão.'},
+   {ctx:'Seu Válter conta que a família não fez velório na pandemia e que ele sente "algo inacabado".',
+    q:'Como o módulo orienta?',
+    opts:[
+     {t:'Perguntar sobre cerimônias e rituais realizados ou planejados; se não houve, conversar sobre os obstáculos e como viabilizar despedidas culturalmente apropriadas.', ok:true,
+      fb:'OUT — luto: apoiar os processos de adaptação e os rituais culturalmente apropriados é parte do manejo; ritos inacabados prolongam a dor.'},
+     {t:'Desencorajar novos rituais: reviver a perda agora só reabriria a ferida.', ok:false,
+      fb:'É o contrário: o rito dá forma e desfecho à dor — evitá-lo mantém o luto suspenso.'},
+     {t:'Sugerir que o tempo resolve e que é melhor não mexer no assunto.', ok:false,
+      fb:'O tempo ajuda quando o processo flui — e o dele está travado num rito inacabado. Falar do obstáculo É o cuidado.'}
+    ],
+    licao:'Luto: apoiar rituais culturalmente apropriados; ritos inacabados merecem atenção ativa.'}
+  ]}
+]}
+];
+
+var TOTAL_MODS = MODS.length;
+
+/* ================= BIBLIOTECA (fichas-resumo do manual) ================= */
+var FICHAS = [
+/* PCE */ '<b>6 dicas de comunicação:</b> ambiente reservado e sigilo; envolver a pessoa; começar escutando; respeito e neutralidade moral; linguagem simples com perguntas abertas e resumos; sensibilidade nas experiências difíceis (violência, autoagressão).<br><b>Dignidade — SIM:</b> respeito, sigilo, privacidade, informação e consentimento, autonomia, decisões fundamentadas. <b>NÃO:</b> discriminar, ignorar prioridades, decidir pela pessoa, jargão técnico.<br><b>Avaliação:</b> queixa inicial → anamnese (MNS pregressa, clínica geral, familiar, psicossocial) → exame físico → EEM (aparência/comportamento, humor/afeto, conteúdo do pensamento, percepção, cognição) → diagnóstico diferencial + exames básicos → identificar a condição.<br><b>Manejo (8 etapas):</b> plano conjunto → psicossociais sempre → farmacológicas se indicadas → encaminhamento → seguimento → cuidador/família → vínculos intersetoriais → populações especiais.<br><b>Plano escrito:</b> farmacológicas (se houver) + psicossociais + referências + seguimento + comorbidades.<br><b>Tratamentos psicológicos:</b> TCC → DEP, MCO, SUB, PSI · TIP, ativação comportamental, relaxamento e solução de problemas → DEP · contingências e reforço motivacional → SUB · terapia familiar → PSI, SUB · habilidades parentais → MCO.<br><b>Dicas transversais:</b> transtorno mental grave = risco 2–3× de morte por doenças evitáveis; sempre que suspeitar de condição MNS, avaliar risco de suicídio (SUI).',
+/* DEP */ '<b>Critérios:</b> ≥ 1 sintoma básico (humor deprimido ou anedonia) por ≥ 2 semanas + vários sintomas adicionais + prejuízo funcional.<br><b>Descartar:</b> condição física (anemia, hipotireoidismo, substâncias, medicamentos); história de mania (→ bipolar, Protocolo 2); grande perda em até 6 meses (luto: não tratar como depressão, salvo ideação suicida, sintomas psicóticos, lentidão psicomotora ou depressão prévia).<br><b>Com sintomas psicóticos:</b> adaptar o tratamento + ESPECIALISTA.<br><b>Manejo:</b> psicoeducação; redução do estresse; ativação/funcionamento; considerar antidepressivo; tratamentos breves (TIP, TCC, ativação, solução de problemas). NÃO usar injeções de vitamina.<br><b>Bipolar:</b> NUNCA antidepressivo sem estabilizador (lítio só com laboratório; carbamazepina; valproato).<br><b>Fluoxetina:</b> 10 → 20 mg/dia (máx. 80; idosos máx. 40). Interações: varfarina (evitar), tamoxifeno, codeína, tramadol; eleva ATCs e antipsicóticos. <b>Amitriptilina:</b> contraindicada em cardiopatas; overdose fatal; nunca em menores.<br><b>Populações:</b> adolescentes ≥ 12: SÓ fluoxetina, retorno semanal por 4 semanas; gestantes: psicossocial primeiro, evitar antidepressivo (sobretudo 1º trimestre); lactação: evitar fluoxetina; idosos: ISRS em dose baixa; risco de suicídio: ISRS + suprimento limitado.<br><b>Duração:</b> 9–12 meses após remissão; retirada gradual ≥ 4 semanas. <b>Seguimento:</b> 2ª consulta em 1 semana; contato mensal nos 3 primeiros meses; mania no seguimento → suspender antidepressivo e ir a PSI.',
+/* PSI */ '<b>Ordem da avaliação:</b> 1º descartar causas médicas/delirium (febre, flutuação da consciência, metabólico, fármacos); 2º mania aguda; 3º psicose (≥ 2 de: delírios, alucinações, desorganização do discurso/comportamento).<br><b>Agitação aguda:</b> desescalada verbal + ambiente calmo ANTES de medicar; contenção é último recurso.<br><b>Mania:</b> SUSPENDER antidepressivo; lítio (só com monitoramento laboratorial e especialista), valproato, carbamazepina ou antipsicótico; benzodiazepínico por 2–4 semanas se agitação; manutenção ≥ 2 anos após o último episódio.<br><b>Psicose:</b> antipsicótico imediato, um por vez, dose baixa, teste de 4–6 semanas; monitorar peso, PA, glicemia, colesterol e ECG.<br><b>Doses iniciais:</b> haloperidol 1,5–3 mg/dia (máx. 20); risperidona 1 → 2–6 mg/dia; clorpromazina 25–50 → 75–300 mg/dia.<br><b>ECE</b> (tremor, rigidez, acatisia, distonia): ajustar dose e/ou biperideno (1 mg 2×/dia → 3–12 mg/dia). <b>SNM</b> (rigidez + febre + PA elevada): suspender e hospital.<br><b>Depósito (flufenazina 12,5–50 mg IM a cada 2–4 semanas):</b> manutenção com má adesão comprovada; nunca no início; evitar em gestantes/lactantes; não usar em menores.<br><b>Populações:</b> gestantes: evitar valproato/lítio/carbamazepina, haloperidol em dose baixa com especialista, sem anticolinérgico de rotina; adolescentes: risperidona só com especialista; idosos: doses menores (na demência: risco cerebrovascular e de morte).<br><b>Família:</b> não confrontar delírios; não culpar; liberdade de movimento; evitar hospitalização prolongada; evitar álcool e cânabis.',
+/* EPI */ '<b>Emergência:</b> proteger (decúbito lateral, NADA na boca, não deixar só) → ABC + sinais vitais + cronometrar → acesso IV → diazepam 10 mg IV/retal (criança: 1 mg/ano) ou midazolam bucal/intranasal 5–10 mg → MÁXIMO 2 DOSES → persistiu: estado de mal → hospital: valproato 20 mg/kg, fenobarbital 15–20 mg/kg ou fenitoína 15–20 mg/kg IV (acesso exclusivo — extravasamento causa dano grave!).<br><b>Gestante (2ª metade) ou até 1 semana pós-parto sem epilepsia prévia:</b> ECLÂMPSIA → sulfato de magnésio 10 g IM + hidralazina se PAd > 110 + hospital com urgência.<br><b>Crise febril (6 m–6 a):</b> simples → investigar a febre (AIDPI), observar 24 h, sem antiepiléptico; complexa (focal, > 15 min ou repetida) → internação.<br><b>Diagnóstico:</b> ≥ 2 crises em dias diferentes no último ano. <b>Diferenciais:</b> síncope (pródromos: palidez, sudorese, escurecimento visual; recuperação rápida); pseudocrise (prolongada, olhos fechados, abalos arrítmicos, gatilho de estresse).<br><b>Causas:</b> asfixia/trauma ao nascer, TCE, neuroinfecção, história familiar; exame neurológico (déficits focais).<br><b>Tratamento:</b> monoterapia, dose mínima, aumento lento; atenção às interações (reduz efeito de anticoncepcionais hormonais, antirretrovirais, antipsicóticos); retirada SEMPRE gradual (considerar após 2 anos sem crises).<br><b>Populações:</b> mulher em idade fértil: folato 5 mg/dia, SEM valproato, parto hospitalar, vitamina K 1 mg IM no recém-nascido; lactação: carbamazepina preferível; HIV: valproato preferível, evitar fenitoína/carbamazepina; criança com problema comportamental: evitar fenobarbital.<br><b>Psicoeducação:</b> crise > 5 min = emergência; não é contagiosa; evitar fogo aberto, nadar sozinho e privação de sono; a maioria vive normalmente com adesão.',
+/* MCO */ '<b>Avaliar:</b> desenvolvimento, desatenção/hiperatividade, problemas emocionais, comportamento desafiador/conduta — sempre incluindo ambiente doméstico E escolar, e investigando violência, abuso e negligência (mudança súbita de comportamento/regressão = alerta).<br><b>Atraso/transtorno do desenvolvimento:</b> psicoeducação, aconselhamento familiar, habilidades parentais, contato com a escola, especialista; SEM fármaco; seguimento a cada 3 meses.<br><b>Problemas de comportamento:</b> orientações aos pais (atenção positiva, instruções claras, consequências consistentes e não violentas), contato escolar; sem fármaco.<br><b>TDAH:</b> intervenções psicossociais primeiro; metilfenidato SÓ com insucesso psicossocial + diagnóstico confirmado + idade ≥ 6 anos, via ESPECIALISTA; seguimento trimestral.<br><b>Problemas emocionais:</b> queixas somáticas recorrentes, recusa escolar, ansiedade, timidez extrema → explorar estressores (inclusive bullying), orientar casa e escola.<br><b>Depressão moderada/grave no adolescente:</b> psicossocial; se persistir: FLUOXETINA (única opção), retorno SEMANAL no 1º mês (vigiar ideação suicida).<br><b>Adolescentes:</b> atender mesmo desacompanhados, com consentimento próprio e escuta em particular.<br><b>Cuidadores:</b> avaliar necessidades e apoiar (grupos, recursos da comunidade).',
+/* DEM */ '<b>Suspeita:</b> declínio de memória/orientação + prejuízo nas atividades essenciais + evolução lenta ≥ 6 meses; SEMPRE entrevistar um informante.<br><b>Descartar:</b> DELIRIUM (início abrupto, curso flutuante, piora noturna → infecção — pedir urina —, fármacos anticolinérgicos, dor, desidratação, metabólico); PSEUDODEMÊNCIA (depressão → tratar DEP e reavaliar).<br><b>Características incomuns → especialista:</b> início < 60 anos; associação com TCE ou AVC; sinais de hipotireoidismo (bócio, pulso lento, pele seca); história de IST/HIV.<br><b>Manejo psicossocial:</b> rotina regular, pistas de orientação (calendário, relógio, objetos familiares), atividade física, atividades prazerosas, estímulo das capacidades preservadas; segurança com autonomia (cozinha, direção); nutrição/fortificação; tratar fatores cardiovasculares (fumo, HAS, diabetes, colesterol, obesidade).<br><b>Fármacos:</b> SEM inibidores de colinesterase (donepezila, galantamina, rivastigmina) ou memantina de rotina — apenas Alzheimer diagnosticado + supervisão e monitoramento especializados. Sintomas comportamentais: psicossocial primeiro; antipsicótico SÓ com risco iminente persistente (dose mínima, com revisão; risco cerebrovascular e de morte em idosos); EVITAR haloperidol IV e diazepam.<br><b>Cuidador:</b> avaliar impacto e necessidades; cuidados temporários (respite); grupos; terapia.<br><b>Seguimento:</b> regular e proativo — função, segurança, comportamento, fármacos e cuidador.',
+/* SUB */ '<b>Rastreamento universal:</b> perguntar a TODOS sobre tabaco e álcool; atenção a pedidos recorrentes de psicoativos, lesões e infecções (HIV, hepatite C).<br><b>Emergências:</b> overdose de opioide (miose puntiforme + FR baixa + inconsciência) → via aérea e ventilação; abstinência de álcool/sedativos (tremor, sudorese, taquicardia, convulsões, delirium — PODE SER FATAL); intoxicação por estimulante (midríase, hipertensão, agitação, paranoia) → ambiente calmo + monitoramento cardiovascular + benzodiazepínico se grave.<br><b>Assinaturas (Quadro 1):</b> álcool/benzodiazepínicos: fala arrastada, desinibição; opioides: miose e sonolência; estimulantes: midríase, euforia, taquicardia; cânabis: conjuntivas vermelhas, risco de psicose; solventes: risco de arritmia e morte súbita; tramadol: efeitos opioides + risco de convulsão.<br><b>Uso prejudicial:</b> intervenção breve + entrevista motivacional + redução de danos (material estéril, testagem, vacinas) + necessidades sociais.<br><b>Dependência de álcool:</b> desintoxicação planejada (interrupção súbita pode matar), tiamina 100 mg/dia (prevenir Wernicke: confusão + nistagmo + oftalmoplegia), prevenção de recaída: acamprosato, naltrexona ou dissulfiram (baclofeno só com especialista).<br><b>Opioides:</b> manutenção com agonistas &gt; desintoxicação isolada; abstinência (midríase, cólicas, piloereção) é sintomática e raramente fatal — o perigo é a overdose na recaída.<br><b>Benzodiazepínicos:</b> redução gradual com dispensação supervisionada.<br><b>Gestantes:</b> abstinência total, com acolhimento. <b>Comorbidades:</b> reavaliar após 2–3 semanas de abstinência.',
+/* SUI */ '<b>Avaliar risco sempre que houver:</b> condição MNS prioritária, dor crônica, sofrimento emocional agudo, desesperança extrema, pensamentos/planos/atos atuais ou passados. PERGUNTAR NÃO INDUZ — em nenhuma idade.<br><b>Ato grave do ponto de vista médico (Protocolo 1):</b> tratar clinicamente (intoxicação, sangramento) em ambiente seguro e de apoio; NUNCA deixar a pessoa sozinha; avaliar o risco após a estabilização — antes de qualquer alta.<br><b>Risco iminente = pensamento ou plano ATUAL (Protocolo 2):</b> eliminar os meios (agrotóxicos, armas, medicamentos), ambiente seguro e tranquilo, supervisão contínua, ativar apoio psicossocial, consultar especialista.<br><b>Risco não iminente (Protocolo 3):</b> apoio psicossocial, especialista se disponível, contato e seguimento periódicos MANTIDOS pela atenção primária.<br><b>Tratar as bases:</b> condição MNS concomitante (DEP, SUB, PSI, EPI, MCO), dor crônica; sintomas emocionais → OUT.<br><b>Prescrição segura:</b> ISRS (nunca frasco cheio de tricíclico — overdose de amitriptilina mata), suprimento fracionado (1 semana), cuidadores guardam e vigiam.<br><b>Adolescentes:</b> avaliar em particular, sem julgamento; autoagressão prévia é grande preditor.<br><b>Pós-crise:</b> é o período de maior risco — contato frequente no início.',
+/* OUT */ '<b>Fluxo:</b> descartar causa física e os módulos específicos → há sofrimento/prejuízo funcional? → houve exposição a estressor extremo?<br><b>Vetos:</b> SEM ansiolíticos ou antidepressivos (salvo orientação de especialista); SEM injeções de vitamina ou tratamentos ineficazes; EVITAR exames sem indicação clara (podem causar dano e preocupação).<br><b>Sintomas sem explicação física:</b> reconhecer que são REAIS (não imaginários); comunicar resultados normais; pedir a explicação da própria pessoa (revela preocupações e melhora adesão); explicar a ligação estresse–corpo; incentivar a continuidade das atividades diárias; ensinar relaxamento (respiração lenta); reativar redes sociais.<br><b>Estressores extremos (violência, acidentes, desastres, perdas):</b> NÃO pressionar a falar do acontecimento; atender necessidades básicas e de proteção; conectar a apoios; retomada gradual da rotina.<br><b>Luto:</b> reação normal, sem maneira certa de viver; apoiar rituais culturalmente apropriados; SEM fármacos. <b>Luto prolongado</b> (≥ 6 meses + prejuízo + preocupação/saudade intensa) → especialista.<br><b>TEPT:</b> suspeitar com ≥ 1 mês de revivescências, pesadelos, evitação e prejuízo importante → especialista.'
+];
+
+function biblioteca(abrir){
+  remember(function(){ biblioteca(abrir); });
+  var blocos = MODS.map(function(m,i){
+    return '<details class="fich"'+(abrir===i?' open':'')+'><summary>'+m.emoji+' '+m.code+' — '+m.nome+'</summary><div class="fbody">'+FICHAS[i]+'</div></details>';
+  }).join('');
+  screen.innerHTML =
+   '<div class="card">'+
+     navBar({mapa:true})+
+     '<span class="phase-badge">📖 Biblioteca</span>'+
+     '<h2>Fichas-resumo do MI-mhGAP</h2>'+
+     '<p class="muted">Consulta rápida por módulo — ideal para revisar antes de rejogar. A fonte completa e definitiva é sempre o manual.</p>'+
+     blocos+
+   '</div>';
+}
+function ficha(i){ biblioteca(i); }
+
+/* ================= TELAS ================= */
+
+function telaPerfis(){
+  PERFIL = null;
+  HIST = [telaPerfis];
+  showHud(false); setPlayerPill();
+  // Ranking: ordena por pontuação (e estrelas como desempate) — motivação social para turmas
+  var lista = listarPerfis().map(function(p){
+    var score=0, stars=0;
+    try{
+      var d = localStorage.getItem('mhgap_save_'+p.id);
+      if(d){ d=JSON.parse(d); score=d.score||0; for(var k in (d.stars||{})) stars+=d.stars[k]; }
+    }catch(e){}
+    return {p:p, score:score, stars:stars};
+  }).sort(function(a,b){ return (b.score-a.score) || (b.stars-a.stars); });
+  var medalhas = ['🥇','🥈','🥉'];
+  var rows = lista.map(function(x, idx){
+    var p = x.p;
+    var aval = (lista.length>1 && x.score>0 && idx<3) ? medalhas[idx] : '👤';
+    return '<div style="display:flex; align-items:center; gap:6px;">'+
+      '<button class="perfil-row" onclick="selecionarPerfil(\''+p.id+'\')">'+
+        '<span class="avatar">'+aval+'</span>'+
+        '<span class="pinfo"><span class="pnome">'+esc(p.nome)+'</span><br><span class="pprog">'+resumoPerfil(p)+'</span></span>'+
+        '<span style="color:var(--blue); font-weight:700;">Entrar ➜</span>'+
+      '</button>'+
+      '<button class="perfil-del" title="Excluir jogador" onclick="uiExcluirPerfil(\''+p.id+'\')">🗑</button>'+
+    '</div>';
+  }).join('');
+  screen.innerHTML =
+   '<div class="card">'+
+     '<div class="center"><div style="font-size:2.6rem">🧠🩺</div>'+
+     '<h2>Quem vai jogar?</h2>'+
+     '<p class="muted">Cada jogador tem seu próprio progresso salvo neste computador/navegador. A lista é o ranking: pontos e estrelas definem o pódio.</p></div>'+
+     (rows || '<p class="muted center" style="margin-top:14px">Nenhum jogador ainda — crie o primeiro abaixo.</p>')+
+     '<div class="perfil-novo">'+
+       '<input type="text" id="novoNome" maxlength="30" placeholder="Nome do novo jogador" onkeydown="if(event.key===\'Enter\')uiCriarPerfil()">'+
+       '<button class="btn" style="margin-top:0" onclick="uiCriarPerfil()">➕ Criar jogador</button>'+
+     '</div>'+
+   '</div>';
+}
+function uiCriarPerfil(){
+  var inp = document.getElementById('novoNome');
+  var nome = (inp && inp.value ? inp.value : '').trim();
+  if(!nome){ if(inp){ inp.focus(); inp.placeholder='Digite um nome para começar'; } return; }
+  var p = criarPerfil(nome);
+  selecionarPerfil(p.id);
+}
+function uiExcluirPerfil(id){
+  var p = listarPerfis().filter(function(x){return x.id===id;})[0];
+  if(p && confirm('Excluir o jogador "'+p.nome+'" e todo o seu progresso?')){
+    excluirPerfil(id); telaPerfis();
+  }
+}
+function selecionarPerfil(id){
+  PERFIL = listarPerfis().filter(function(p){return p.id===id;})[0] || null;
+  if(!PERFIL){ telaPerfis(); return; }
+  setPlayerPill();
+  telaInicial();
+}
+function trocarJogador(){
+  salvar(); // preserva o ponto atual do jogador que está saindo
+  telaPerfis();
+}
+
+function telaInicial(){
+  if(!PERFIL){ telaPerfis(); return; }
+  HIST = [telaPerfis, telaInicial];
+  showHud(false); setPlayerPill();
+  var save = carregar();
+  var badgesHtml = MODS.map(function(m){return '<div class="badge off"><div class="emoji">'+m.badge.emoji+'</div><div class="name">'+m.badge.name+'</div></div>';}).join('');
+  var continuar = save ? '<button class="btn" onclick="continuarJogo()">▶ Continuar plantão ('+Object.keys(save.done||{}).length+'/'+TOTAL_MODS+' módulos, '+ (save.score||0) +' pts)</button> ' : '';
+  screen.innerHTML =
+   '<div class="card center">'+
+     '<div style="font-size:3rem">🧠🩺</div>'+
+     '<h2>Missão mhGAP — O Jogo Completo</h2>'+
+     '<p class="muted">👤 '+esc(PERFIL.nome)+' · Baseado no MI-mhGAP 2.0 (OPAS/OMS) — todos os módulos</p>'+
+     '<p style="max-width:600px;margin:14px auto;">Você é profissional de uma unidade de atenção primária. No <b>Mapa Geral</b>, escolha um módulo, conduza anamneses, atenda os pacientes virtuais e percorra os algoritmos do manual: <b>PCE, DEP, PSI, EPI, MCO, DEM, SUB, SUI e OUT</b>.</p>'+
+     '<div class="dica" style="text-align:left;max-width:600px;margin:14px auto;"><b>Como funciona:</b> a <b>confiança do paciente</b> tem consequências — alta, ele coopera e dá pistas; baixa, ele omite informações e seus acertos valem menos; zerada, ele ameaça abandonar o cuidado. Acertos em sequência ativam o <b>combo ×2</b>. Os casos em que você errar <b>voltam</b> no fim do módulo, e o plantão só termina após a <b>rodada mista final</b>. As <b>perguntas de cada módulo são sorteadas de um banco</b> com 10 ou mais casos — cada jogada é diferente. Seu progresso é salvo automaticamente. Para acessibilidade, o botão <b>🗣️ Ouvir</b> (canto inferior direito) lê em voz alta o texto de cada tela.</div>'+
+     '<div class="badges">'+badgesHtml+'</div>'+
+     continuar+
+     '<button class="btn'+(save?' ghost':'')+'" onclick="apagarSave(); startGame()">'+(save?'Novo jogo':'▶ Iniciar plantão')+'</button> '+
+     '<button class="btn ghost" onclick="telaPerfis()">👤 Trocar de jogador</button>'+
+   '</div>';
+}
+
+function continuarJogo(){
+  var d = carregar();
+  if(d){
+    S.trust=d.trust; S.score=d.score; S.done=d.done||{}; S.stars=d.stars||{};
+    S.errors=d.errors||[]; S.misto=!!d.misto; S.ft=d.ft||{}; S.vistos=d.vistos||{}; S.combo=0;
+  }
+  HIST=[telaPerfis, telaInicial];
+  showHud(true); setTrust(0); addScore(0); setCombo(0);
+  mapaGeral();
+}
+
+function startGame(){
+  S.trust=100; S.score=0; S.errors=[]; S.done={}; S.stars={}; S.combo=0; S.misto=false; S.ft={}; S.vistos={};
+  MODE='normal'; PEND=[];
+  HIST = [telaPerfis, telaInicial];
+  showHud(true); setTrust(0); addScore(0); setCombo(0);
+  mapaGeral();
+}
+
+function nDone(){ var n=0; for(var k in S.done) if(S.done[k]) n++; return n; }
+function starsHtml(n){ var s=''; for(var i=0;i<3;i++) s += i<n?'★':'☆'; return s; }
+function cobertura(i){
+  var total=0, vistas=0, v = S.vistos[i] || {};
+  MODS[i].acts.forEach(function(a){
+    if(a.type==='cenario') a.data.forEach(function(c){ total++; if(v[c.q]) vistas++; });
+  });
+  return {v:vistas, t:total, completo:vistas>=total};
+}
+
+function mapaGeral(){
+  remember(mapaGeral);
+  salvar();
+  var cards = MODS.map(function(m,i){
+    var cob = cobertura(i);
+    return '<button class="mg-mod'+(S.done[i]?' done':'')+'" onclick="introMod('+i+')">'+
+      '<span class="check">✓</span>'+
+      '<span class="emoji">'+m.emoji+'</span>'+
+      '<span class="code">'+m.code+'</span>'+
+      '<div class="nm">'+m.nome+'</div>'+
+      '<div class="ds">'+m.desc+'</div>'+
+      '<div class="ds" style="margin-top:6px">📚 '+cob.v+'/'+cob.t+' casos vistos'+(cob.completo?' ✓':'')+'</div>'+
+      (S.done[i] ? '<span class="stars">'+starsHtml(S.stars[i]||1)+'</span>' : '')+
+    '</button>';
+  }).join('');
+  var fim;
+  if(nDone()===TOTAL_MODS && !S.misto){
+    fim = '<div class="center"><button class="btn" onclick="runMisto()">⚡ Plantão misto final — 6 casos-relâmpago</button><p class="muted">A rodada final sorteia casos de todos os módulos. Só depois dela o plantão se encerra.</p></div>';
+  } else if(S.misto){
+    fim = '<div class="center"><button class="btn" onclick="telaFinal()">🏅 Ver placar final</button> <button class="btn ghost" onclick="runMisto()">⚡ Repetir plantão misto</button></div>';
+  } else {
+    fim = '<p class="muted center" style="margin-top:14px">Módulos concluídos: '+nDone()+' de '+TOTAL_MODS+'. Complete todos para liberar o plantão misto final.</p>';
+  }
+  screen.innerHTML =
+   '<div class="card">'+
+     navBar({})+
+     '<span class="phase-badge">MG · Mapa Geral</span>'+
+     '<h2>Escolha o próximo módulo</h2>'+
+     '<p class="muted">Como no manual, o Mapa Geral orienta para onde ir. Estrelas refletem os acertos de primeira tentativa — a 3ª estrela exige ver todos os casos do banco.</p>'+
+     '<div class="center" style="margin:4px 0 8px"><button class="navbtn" onclick="biblioteca()">📖 Biblioteca — fichas-resumo do manual</button></div>'+
+     '<div class="mg-grid">'+cards+'</div>'+fim+
+   '</div>';
+}
+
+function introMod(i){
+  S.mod=i;
+  MODE='normal'; PEND=[]; RUN_SAMPLE={}; // novo sorteio de perguntas a cada rodada do módulo
+  S.ft[i]={t:0,c:0}; // zera stats ao (re)começar o módulo
+  // Novo paciente, novo vínculo: quem chegou com a confiança baixa recomeça de um patamar base
+  var recomecou = S.trust < 70;
+  S.trust = Math.max(S.trust, 70); setTrust(0);
+  // Reabre a pontuação dos desafios deste módulo (rejogá-lo inteiro pontua; revisitar pelo Voltar, não)
+  MODS[i].acts.forEach(function(a){
+    if(a.type==='cenario') a.data.forEach(function(c){ delete c._scored; });
+    else delete a.data._scored;
+  });
+  remember(function(){ introMod(i); });
+  var m=MODS[i];
+  screen.innerHTML =
+   '<div class="card center">'+
+     navBar({mapa:true})+
+     '<div style="font-size:2.6rem">'+m.emoji+'</div>'+
+     '<span class="phase-badge">'+m.code+'</span>'+
+     '<h2>'+m.nome+'</h2>'+
+     '<p style="max-width:560px;margin:10px auto;">'+m.intro+'</p>'+
+     (recomecou ? '<p class="muted">🤝 Paciente novo, vínculo novo: a confiança recomeça em '+S.trust+'.</p>' : '')+
+     '<button class="btn" onclick="runAct(0)">Começar módulo</button> '+
+     '<button class="btn ghost" onclick="mapaGeral()">↩ Mapa Geral</button>'+
+   '</div>';
+}
+
+function runAct(a){
+  var m=MODS[S.mod];
+  if(a>=m.acts.length){ recoverRound(); return; }
+  var act=m.acts[a];
+  if(act.type==='cenario'){
+    // Sorteio SEM reposição: prioriza perguntas que este jogador ainda não viu,
+    // garantindo que rodadas sucessivas cubram o banco inteiro do módulo.
+    if(!RUN_SAMPLE[a]){
+      if(act.data.length>5){
+        var vist = S.vistos[S.mod] || {};
+        var novas = act.data.filter(function(c){ return !vist[c.q]; });
+        var antigas = act.data.filter(function(c){ return vist[c.q]; });
+        var sel = shuffle(novas).slice(0,4);
+        if(sel.length<4) sel = sel.concat(shuffle(antigas).slice(0, 4-sel.length));
+        RUN_SAMPLE[a] = sel;
+      } else RUN_SAMPLE[a] = act.data;
+    }
+    cenario(RUN_SAMPLE[a], 0, function(){ runAct(a+1); });
+  }
+  else if(act.type==='ordena') ordena(act.data, function(){ runAct(a+1); });
+  else if(act.type==='anamnese') anamnese(act.data, function(){ runAct(a+1); });
+}
+
+function dots(total, now){
+  var h='<div class="progress-dots">';
+  for(var i=0;i<total;i++) h+='<div class="dot '+(i<now?'done':i===now?'now':'')+'"></div>';
+  return h+'</div>';
+}
+
+function tierBanner(){
+  var t = trustTier();
+  if(MODE!=='normal') return '';
+  if(t==='alto') return '<div class="vinculo alto">💚 <b>Vínculo forte:</b> o paciente confia em você e colabora. Se precisar, peça mais detalhes (elimina uma opção errada).</div>';
+  if(t==='baixo') return '<div class="vinculo baixo">💔 <b>Vínculo frágil:</b> o paciente responde com evasivas e omite detalhes. Seus acertos valem metade dos pontos até a confiança se recuperar.</div>';
+  return '';
+}
+
+/* ---- cenários ---- */
+function cenario(lista, i, done){
+  if(i>=lista.length){ done(); return; }
+  remember(function(){ cenario(lista, i, done); });
+  var m=MODS[S.mod], c=lista[i];
+  var badgeCls = MODE==='recover' ? ' recover' : (MODE==='misto' ? ' misto' : '');
+  var badgeTxt = MODE==='recover' ? '🔁 Recuperação · '+m.code : (MODE==='misto' ? '⚡ Plantão misto · '+(c._src||m.code) : m.code+' · '+m.nome);
+  var ordem = shuffle(c.opts.map(function(o,idx){return idx;}));
+  var hintBtn = (trustTier()==='alto' && MODE==='normal')
+    ? '<button class="btn hint" id="hintBtn">💬 Pedir mais detalhes ao paciente (a consulta se alonga: −4 de confiança)</button>' : '';
+  screen.innerHTML =
+   '<div class="card">'+
+     navBar({modulo:MODE==='normal', mapa:true})+
+     '<span class="phase-badge'+badgeCls+'">'+badgeTxt+'</span>'+
+     dots(lista.length, i)+
+     tierBanner()+
+     '<div class="scenario">'+c.ctx+'</div>'+
+     '<h3>'+c.q+'</h3>'+
+     hintBtn+
+     '<div class="opts" id="opts">'+
+       ordem.map(function(idx){return '<button class="opt" data-i="'+idx+'">'+esc(c.opts[idx].t)+'</button>';}).join('')+
+     '</div>'+
+     '<div id="fb"></div>'+
+   '</div>';
+  var hb = document.getElementById('hintBtn');
+  if(hb){ hb.onclick = function(){
+    setTrust(-4); // pedir detalhes tem custo: a consulta se alonga
+    var wrong = [];
+    var bs = document.querySelectorAll('#opts .opt');
+    for(var k=0;k<bs.length;k++) if(!c.opts[+bs[k].dataset.i].ok && !bs[k].classList.contains('eliminated')) wrong.push(bs[k]);
+    if(wrong.length>1){
+      var el = wrong[Math.floor(Math.random()*wrong.length)];
+      el.classList.add('eliminated'); el.disabled=true;
+    }
+    hb.disabled = true; hb.textContent = '💬 O paciente deu uma pista.';
+  };}
+  var btns = document.querySelectorAll('#opts .opt');
+  for(var b=0;b<btns.length;b++){
+    (function(btn){
+      btn.onclick = function(){
+        var o=c.opts[+btn.dataset.i];
+        // Anti-farm: revisitar (pelo Voltar) um cenário já pontuado não gera pontos, confiança nem registros
+        var repeat = (MODE==='normal' && c._scored===true);
+        if(MODE==='normal') c._scored = true;
+        for(var k=0;k<btns.length;k++){
+          btns[k].disabled=true;
+          if(c.opts[+btns[k].dataset.i].ok) btns[k].classList.add('correct');
+        }
+        if(MODE==='normal' && !repeat){
+          S.ft[S.mod].t++; if(o.ok) S.ft[S.mod].c++;
+          if(!S.vistos[S.mod]) S.vistos[S.mod] = {};
+          S.vistos[S.mod][c.q] = true; // registra cobertura do banco
+        }
+        if(o.ok){
+          sndOk();
+          if(!repeat){
+            setCombo(S.combo+1);
+            var base = MODE==='recover' ? 50 : 100;
+            var mult = (S.combo>=3 && MODE==='normal') ? 2 : 1;
+            var tierCut = (trustTier()==='baixo' && MODE==='normal') ? 0.5 : 1;
+            var ganho = Math.round(base*mult*tierCut);
+            addScore(ganho); scorePop(ganho); setTrust(+5);
+          }
+          fbBox(true, o.fb + (repeat ? ' (Revisita: sem nova pontuação.)' : ''));
+        } else {
+          sndErr();
+          setCombo(0);
+          btn.classList.add('wrong','shake');
+          if(!repeat) setTrust(-12);
+          fbBox(false, o.fb + (repeat ? ' (Revisita: sem novo registro.)' : ''));
+          if(MODE==='normal' && !repeat){
+            logErr(m.code+' — '+m.nome, c.q, c.licao);
+            PEND.push(c);
+          } else if(MODE==='misto'){
+            logErr((c._src||m.code)+' — plantão misto', c.q, c.licao);
+          }
+        }
+        document.getElementById('fb').insertAdjacentHTML('beforeend',
+          '<button class="btn" onclick="__next()">Continuar ➜</button>');
+        window.__next = function(){
+          var adv = function(){ cenario(lista, i+1, done); };
+          if(!checkRescue(adv)) adv();
+        };
+      };
+    })(btns[b]);
+  }
+}
+function fbBox(ok, txt){
+  document.getElementById('fb').innerHTML =
+   '<div class="feedback '+(ok?'good':'bad')+'">'+
+      '<span class="tag">'+(ok?'✔ Boa decisão!':'✘ O manual orienta diferente')+'</span>'+
+      esc(txt)+
+      '<span class="src">Fonte: MI-mhGAP 2.0 (OPAS/OMS)</span>'+
+    '</div>';
+}
+
+/* ---- anamnese (o jogador escolhe o que perguntar) ----
+   Escolhas ruins custam CONFIANÇA, não orçamento: o erro dói, mas é recuperável.
+   O jogador pode encerrar cedo — e responder pelo que deixou de perguntar. */
+function anamnese(cfg, done){
+  remember(function(){ anamnese(cfg, done); });
+  var m=MODS[S.mod];
+  var feitos = {}, obtidas = 0, agiu = false;
+  var repeat = (cfg._scored===true); // anti-farm via Voltar
+  screen.innerHTML =
+   '<div class="card">'+
+     navBar({modulo:true, mapa:true})+
+     '<span class="phase-badge">'+m.code+' · Anamnese</span>'+
+     tierBanner()+
+     '<div class="scenario">'+cfg.intro+'</div>'+
+     '<p class="muted">A informação está incompleta. Escolha <b>como conduzir a consulta</b>. Ações mal escolhidas custam a confiança do paciente. <span class="ana-counter" id="anaCount">Essenciais: 0/'+cfg.max+'</span></p>'+
+     '<div class="ana-grid" id="anaGrid">'+
+       shuffle(cfg.itens.map(function(o,idx){return idx;})).map(function(idx){
+         return '<button class="opt" data-i="'+idx+'">'+esc(cfg.itens[idx].t)+'</button>';
+       }).join('')+
+     '</div>'+
+     '<div class="center"><button class="btn ghost" id="anaDone" disabled>Encerrar anamnese e decidir ➜</button></div>'+
+     '<div class="ana-log" id="anaLog"></div>'+
+     '<div id="fb"></div>'+
+   '</div>';
+  var grid = document.getElementById('anaGrid');
+  var btns = grid.querySelectorAll('.opt');
+  var doneBtn = document.getElementById('anaDone');
+  function concluir(){
+    cfg._scored = true;
+    for(var k=0;k<btns.length;k++) btns[k].disabled=true;
+    doneBtn.disabled=true; doneBtn.style.display='none';
+    var perdidos = [];
+    for(var j=0;j<cfg.itens.length;j++){
+      if(cfg.itens[j].ok && !feitos[j]) perdidos.push(cfg.itens[j]);
+    }
+    var htmlPerd = '';
+    if(perdidos.length){
+      htmlPerd = '<div class="feedback bad"><span class="tag">✘ Informação essencial ficou de fora</span>'+
+        perdidos.map(function(p){return '• '+esc(p.t)+'<br><i>'+esc(p.note)+'</i>';}).join('<br>')+
+        '<span class="src">Fonte: MI-mhGAP 2.0 (OPAS/OMS)</span></div>';
+      if(!repeat){ logErr(m.code+' — '+m.nome, 'Anamnese incompleta', cfg.licao); setTrust(-6); }
+      sndErr(); setCombo(0);
+    } else {
+      htmlPerd = '<div class="feedback good"><span class="tag">✔ Anamnese completa!</span>'+esc(cfg.licao)+
+        '<span class="src">Fonte: MI-mhGAP 2.0 (OPAS/OMS)</span></div>';
+      sndOk();
+      if(!repeat){ addScore(80); scorePop(80); }
+    }
+    document.getElementById('fb').innerHTML = htmlPerd +
+      '<button class="btn" onclick="__next()">Continuar ➜</button>';
+    window.__next = function(){
+      var adv = done;
+      if(!checkRescue(adv)) adv();
+    };
+  }
+  doneBtn.onclick = function(){ if(agiu) concluir(); };
+  for(var b=0;b<btns.length;b++){
+    (function(btn){
+      btn.onclick = function(){
+        if(btn.disabled) return;
+        var it = cfg.itens[+btn.dataset.i];
+        feitos[+btn.dataset.i]=true;
+        btn.disabled=true;
+        agiu = true; doneBtn.disabled=false;
+        if(it.ok){
+          obtidas++;
+          document.getElementById('anaCount').textContent = 'Essenciais: '+obtidas+'/'+cfg.max;
+          btn.classList.add('asked-good');
+          sndOk();
+          if(!repeat){ addScore(30); scorePop(30); setTrust(+3); }
+          document.getElementById('anaLog').insertAdjacentHTML('beforeend',
+            '<div class="ana-resp good"><b>Paciente:</b> '+esc(it.resp)+'<br><i>'+esc(it.note)+'</i></div>');
+          if(obtidas>=cfg.max) concluir();
+        } else {
+          btn.classList.add('asked-bad');
+          sndErr(); setCombo(0);
+          if(!repeat) setTrust(-8);
+          document.getElementById('anaLog').insertAdjacentHTML('beforeend',
+            '<div class="ana-resp bad"><b>Reação:</b> '+esc(it.resp)+'<br><i>'+esc(it.note)+'</i></div>');
+        }
+      };
+    })(btns[b]);
+  }
+}
+
+/* ---- ordenar etapas (anti-exploit: 2 erros = reembaralhar) ---- */
+function ordena(cfg, done){
+  remember(function(){ ordena(cfg, done); });
+  var m=MODS[S.mod];
+  var alvo=0, erros=0, errosSeq=0;
+  function renderPool(){
+    var livres = [];
+    for(var j=alvo;j<cfg.itens.length;j++) livres.push(j);
+    livres = shuffle(livres);
+    var travados = '';
+    for(var l=0;l<alvo;l++){
+      travados += '<button class="opt locked"><span class="num">'+(l+1)+'</span>'+esc(cfg.itens[l])+'</button>';
+    }
+    document.getElementById('pool').innerHTML = travados +
+      livres.map(function(idx){return '<button class="opt" data-i="'+idx+'">'+esc(cfg.itens[idx])+'</button>';}).join('');
+    bind();
+  }
+  screen.innerHTML =
+   '<div class="card">'+
+     navBar({modulo:true, mapa:true})+
+     '<span class="phase-badge">'+m.code+' · '+m.nome+'</span>'+
+     '<div class="scenario">'+cfg.intro+'</div>'+
+     '<p class="muted">Toque as etapas na ordem correta (1ª, 2ª, 3ª…). Dois erros seguidos reembaralham as opções.</p>'+
+     '<div class="order-pool" id="pool"></div>'+
+     '<div id="fb"></div>'+
+   '</div>';
+  function bind(){
+    var btns=document.querySelectorAll('#pool .opt:not(.locked)');
+    for(var b=0;b<btns.length;b++){
+      (function(btn){
+        btn.onclick=function(){
+          var repeat = (cfg._scored===true); // anti-farm via Voltar
+          if(+btn.dataset.i === alvo){
+            sndOk();
+            alvo++; errosSeq=0;
+            if(!repeat){ addScore(40); scorePop(40); setTrust(+1); }
+            if(alvo===cfg.itens.length){
+              cfg._scored = true;
+              if(erros>0 && !repeat) logErr(m.code+' — '+m.nome, 'Ordenação das etapas', cfg.licao);
+              renderPool();
+              document.getElementById('fb').innerHTML =
+               '<div class="feedback good"><span class="tag">✔ Sequência completa!</span>'+esc(cfg.licao)+
+                '<span class="src">Fonte: MI-mhGAP 2.0 (OPAS/OMS)</span></div>'+
+                '<button class="btn" onclick="__next()">Continuar ➜</button>';
+              window.__next = function(){ var adv=done; if(!checkRescue(adv)) adv(); };
+            } else renderPool();
+          } else {
+            sndErr();
+            erros++; errosSeq++; setCombo(0);
+            if(!repeat) setTrust(-6);
+            btn.classList.add('shake');
+            if(errosSeq>=2){
+              errosSeq=0;
+              document.getElementById('fb').innerHTML =
+               '<div class="feedback bad"><span class="tag">✘ Dois erros seguidos — opções reembaralhadas</span>'+
+                'Nada de tentativa e erro: pense no percurso do paciente. O que precisa acontecer <b>antes</b>?</div>';
+              setTimeout(renderPool, 350);
+            } else {
+              setTimeout(function(){btn.classList.remove('shake');}, 350);
+              document.getElementById('fb').innerHTML =
+               '<div class="feedback bad"><span class="tag">✘ Ainda não é essa</span>'+
+                'Pense no percurso: o que precisa acontecer <b>antes</b> desta etapa fazer sentido?</div>';
+            }
+          }
+        };
+      })(btns[b]);
+    }
+  }
+  renderPool();
+}
+
+/* ---- rodada de recuperação (loop de maestria) ---- */
+function recoverRound(){
+  if(PEND.length===0){ fimMod(); return; }
+  var fila = PEND.slice(); PEND = [];
+  MODE = 'recover';
+  remember(function(){ MODE='recover'; introRecover(fila); });
+  introRecover(fila);
+}
+function introRecover(fila){
+  var m=MODS[S.mod];
+  screen.innerHTML =
+   '<div class="card center">'+
+     navBar({mapa:true})+
+     '<span class="phase-badge recover">🔁 Rodada de recuperação</span>'+
+     '<h2>Os casos em que você tropeçou voltaram</h2>'+
+     '<p style="max-width:540px;margin:10px auto;">Antes da medalha de <b>'+m.nome+'</b>, resolva de novo os '+fila.length+' caso(s) em que errou. Agora valem 50 pontos cada — o que importa é fixar o algoritmo.</p>'+
+     '<button class="btn" onclick="__go()">Encarar de novo ➜</button>'+
+   '</div>';
+  window.__go = function(){
+    cenario(shuffle(fila), 0, function(){ MODE='normal'; fimMod(); });
+  };
+}
+
+/* ---- fim de módulo ---- */
+function calcStars(){
+  var s = S.ft[S.mod]||{t:0,c:0};
+  if(s.t===0) return 1;
+  var p = s.c/s.t;
+  var base = p>=0.9 ? 3 : (p>=0.65 ? 2 : 1);
+  // A 3ª estrela exige ter visto o banco COMPLETO do módulo (garante exposição a todo o conteúdo)
+  if(base===3 && !cobertura(S.mod).completo) base = 2;
+  return base;
+}
+function fimMod(){
+  S.done[S.mod]=true;
+  S.stars[S.mod]=calcStars();
+  salvar();
+  remember(fimMod);
+  var m=MODS[S.mod];
+  var todos = nDone()===TOTAL_MODS;
+  var st = S.stars[S.mod];
+  screen.innerHTML =
+   '<div class="card center">'+
+     navBar({modulo:true, mapa:true})+
+     '<div style="font-size:3rem">'+m.badge.emoji+'</div>'+
+     '<h2>Medalha conquistada: '+m.badge.name+'!</h2>'+
+     '<p style="font-size:1.4rem; color:var(--amber); letter-spacing:4px;">'+starsHtml(st)+'</p>'+
+     '<p class="muted">Módulo '+m.code+' — '+m.nome+' — concluído. '+
+       (st===3?'Desempenho impecável na primeira tentativa!':st===2?'Bom desempenho — vale rejogar o módulo em busca das 3 estrelas.':'Módulo fechado na garra — rejogue depois para subir as estrelas.')+'</p>'+
+     '<p>Confiança do paciente: <b>'+S.trust+'</b> · Pontos: <b>'+S.score+'</b> · Módulos: <b>'+nDone()+'/'+TOTAL_MODS+'</b></p>'+
+     (function(){ var cob = cobertura(S.mod);
+        return cob.completo
+          ? '<p class="muted">📚 Banco completo: você viu todos os '+cob.t+' casos deste módulo.</p>'
+          : '<p class="muted">📚 Você viu <b>'+cob.v+'/'+cob.t+'</b> casos do banco — rejogue o módulo para conhecer os restantes e liberar a 3ª estrela.</p>'; })()+
+     (todos && !S.misto
+       ? '<button class="btn" onclick="runMisto()">⚡ Plantão misto final ➜</button>'
+       : '<button class="btn" onclick="mapaGeral()">Voltar ao Mapa Geral ➜</button>')+
+     ' <button class="btn ghost" onclick="ficha('+S.mod+')">📖 Ficha do módulo</button>'+
+   '</div>';
+  sndBadge(); confete();
+}
+
+/* ---- plantão misto final (repetição espaçada + sorteio) ---- */
+function poolMisto(){
+  var pool = [];
+  MODS.forEach(function(m){
+    m.acts.forEach(function(a){
+      if(a.type==='cenario') a.data.forEach(function(c){
+        var cc = {}; for(var k in c) cc[k]=c[k];
+        cc._src = m.code;
+        pool.push(cc);
+      });
+    });
+  });
+  return pool;
+}
+function runMisto(){
+  MODE = 'misto';
+  // Repetição espaçada de verdade: casos errados durante o plantão têm prioridade no sorteio
+  var pool = poolMisto();
+  var erradas = {};
+  S.errors.forEach(function(e){ erradas[e.resumo] = true; });
+  var errPool = shuffle(pool.filter(function(c){ return erradas[c.q]; }));
+  var restPool = shuffle(pool.filter(function(c){ return !erradas[c.q]; }));
+  var sel = errPool.slice(0,4);
+  sel = shuffle(sel.concat(restPool.slice(0, 6 - sel.length)));
+  remember(function(){ MODE='misto'; introMisto(sel); });
+  introMisto(sel);
+}
+function introMisto(sel){
+  screen.innerHTML =
+   '<div class="card center">'+
+     navBar({mapa:true})+
+     '<span class="phase-badge misto">⚡ Plantão misto</span>'+
+     '<h2>Rodada final: 6 casos-relâmpago</h2>'+
+     '<p style="max-width:540px;margin:10px auto;">A sala de espera mistura tudo: os casos vêm <b>sorteados de todos os módulos</b>, sem avisar de qual — e os que você <b>errou durante o plantão têm prioridade</b> no sorteio. É a prova de que o conteúdo ficou.</p>'+
+     '<button class="btn" onclick="__go()">Abrir a porta ➜</button>'+
+   '</div>';
+  window.__go = function(){
+    cenario(sel, 0, function(){
+      MODE='normal'; S.misto=true; salvar(); telaFinal();
+    });
+  };
+}
+
+/* ---- tela final ---- */
+function telaFinal(){
+  remember(telaFinal);
+  salvar();
+  var totalStars = 0; for(var k in S.stars) totalStars += S.stars[k];
+  var nota = S.errors.length===0 ? 'Impecável! Você percorreu todos os algoritmos sem tropeços.'
+    : S.errors.length<=6 ? 'Excelente plantão — revise os pontos abaixo e estará pronto(a) para a prática.'
+    : 'Bom trabalho ao concluir! A lista abaixo mostra exatamente o que reler no manual.';
+  var revisao = S.errors.length===0 ? '<p class="muted">Nenhum ponto de revisão — parabéns!</p>'
+    : S.errors.map(function(e){return '<div class="review"><b>'+esc(e.fase)+'</b> — '+esc(e.resumo)+'<br>📖 <i>'+esc(e.licao)+'</i></div>';}).join('');
+  var badgesHtml = MODS.map(function(m,i){
+    return '<div class="badge '+(S.done[i]?'':'off')+'"><div class="emoji">'+m.badge.emoji+'</div><div class="name">'+m.badge.name+'</div>'+
+      (S.done[i]?'<div class="stars">'+starsHtml(S.stars[i]||1)+'</div>':'')+'</div>';
+  }).join('');
+  screen.innerHTML =
+   '<div class="card center">'+
+     navBar({mapa:true})+
+     '<div style="font-size:3rem">🏅</div>'+
+     '<h2>Plantão concluído!</h2>'+
+     '<div class="score-big">'+S.score+' pts</div>'+
+     '<p>Confiança final: <b>'+S.trust+'/100</b> · Estrelas: <b>'+totalStars+'/'+(TOTAL_MODS*3)+'</b> · Módulos: <b>'+nDone()+'/'+TOTAL_MODS+'</b></p>'+
+     '<p style="max-width:540px;margin:10px auto;">'+nota+'</p>'+
+     '<div class="badges">'+badgesHtml+'</div>'+
+     '<h3>📚 Revisão personalizada</h3>'+revisao+
+     '<div class="dica" style="text-align:left"><b>Lembretes transversais:</b> em TODO módulo, se houver risco iminente de suicídio, avalie e trate antes de continuar (SUI). Pessoas com transtornos mentais graves têm risco 2–3× maior de morte por doenças evitáveis — monitore sempre a saúde física (PCE).</div>'+
+     '<p class="muted">Quer as 27 estrelas? Rejogue os módulos com ★☆☆ — o sorteio do plantão misto também muda a cada partida.</p>'+
+     '<button class="btn" onclick="reiniciarJogo()">🔁 Jogar novamente</button> '+
+     '<button class="btn ghost" onclick="telaInicial()">Voltar ao início</button>'+
+   '</div>';
+  confete();
+}
+
+migrarLegacy();
+if(MUTED){ var _mb=document.getElementById('muteBtn'); if(_mb) _mb.textContent='🔇'; }
+/* Leitura em voz alta: esconde o botão se o navegador não suportar
+   e interrompe a fala sempre que a tela muda */
+(function(){
+  var b = document.getElementById('ttsBtn');
+  if(!TTS_OK){ if(b) b.style.display='none'; }
+  else if(typeof MutationObserver!=='undefined'){
+    try{
+      new MutationObserver(function(){ pararFala(); })
+        .observe(document.getElementById('screen'), {childList:true});
+    }catch(e){}
+  }
+})();
+telaPerfis();
+</script>
+</body>
+</html>
